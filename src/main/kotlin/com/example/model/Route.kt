@@ -1,6 +1,6 @@
 package com.example.model
 
-import com.example.plugins.SQLHelper
+import com.example.plugins.Helper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -43,16 +43,16 @@ class RouteService(private val connection: Connection) : Service {
             val name = resultSet.getString("name")
             val color = resultSet.getString("color")
 
-            val stops = SQLHelper.convertToIntList(resultSet, "stop_ids")
+            val stops = Helper.convertSQLArrayToIntList(resultSet, "stop_ids")
                 .map { id:Int -> allStops.filter { it.id==id } }
                 .flatMap { it }
 
-            val timeInterval = SQLHelper.convertToStringList(resultSet, "time_interval")
-            val machinists = SQLHelper.convertToIntList(resultSet, "machinist_ids")
+            val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
+            val machinists = Helper.convertSQLArrayToIntList(resultSet, "machinist_ids")
                 .map { id: Int -> allEmployees.filter { it.id == id } }
                 .flatMap { it }
 
-            val dispatchers = SQLHelper.convertToIntList(resultSet, "dispatcher_ids")
+            val dispatchers = Helper.convertSQLArrayToIntList(resultSet, "dispatcher_ids")
                 .map { id: Int -> allEmployees.filter { it.id == id } }
                 .flatMap { it }
             routeList.add(Route(id, name, color, stops, timeInterval, machinists, dispatchers))
@@ -74,16 +74,16 @@ class RouteService(private val connection: Connection) : Service {
             val name = resultSet.getString("name")
             val color = resultSet.getString("color")
 
-            val stops = SQLHelper.convertToIntList(resultSet, "stop_ids")
+            val stops = Helper.convertSQLArrayToIntList(resultSet, "stop_ids")
                 .map { id:Int -> allStops.filter { it.id==id } }
                 .flatMap { it }
 
-            val timeInterval = SQLHelper.convertToStringList(resultSet, "time_interval")
-            val machinists = SQLHelper.convertToIntList(resultSet, "machinist_ids")
+            val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
+            val machinists = Helper.convertSQLArrayToIntList(resultSet, "machinist_ids")
                 .map { id: Int -> allEmployees.filter { it.id == id } }
                 .flatMap { it }
 
-            val dispatchers = SQLHelper.convertToIntList(resultSet, "dispatcher_ids")
+            val dispatchers = Helper.convertSQLArrayToIntList(resultSet, "dispatcher_ids")
                 .map { id: Int -> allEmployees.filter { it.id == id } }
                 .flatMap { it }
             return@withContext Route(id, name, color, stops, timeInterval, machinists, dispatchers)
@@ -97,12 +97,17 @@ class RouteService(private val connection: Connection) : Service {
             val statement = connection.prepareStatement(INSERT_ROUTE)
             statement.setString(1, obj.name)
             statement.setString(2, obj.color)
-            statement.setArray(3, SQLHelper.prepareArrayFromIntList(connection, obj.stops.map { it.id }))
-            statement.setArray(4, SQLHelper.prepareArrayFromStringList(connection, obj.timeInterval))
-            statement.setArray(5, SQLHelper.prepareArrayFromIntList(connection, obj.machinists.map { it.id }))
-            statement.setArray(6, SQLHelper.prepareArrayFromIntList(connection, obj.dispatchers.map { it.id }))
-            statement.executeUpdate()
-        } else {
+            statement.setArray(3, Helper.prepareSQLArrayFromIntList(connection, obj.stops.map { it.id }))
+            statement.setArray(4, Helper.prepareSQLArrayFromStringList(connection, obj.timeInterval))
+            statement.setArray(5, Helper.prepareSQLArrayFromIntList(connection, obj.machinists.map { it.id!! }))
+            statement.setArray(6, Helper.prepareSQLArrayFromIntList(connection, obj.dispatchers.map { it.id!! }))
+            statement.executeQuery()
+            val resultSet = statement.resultSet
+            if(resultSet.next()) {
+                return@withContext resultSet.getInt(1)
+            } else {
+                throw Exception("error in creating employee")
+            }        } else {
             throw Exception("error in create role")
         }
     }
@@ -112,10 +117,10 @@ class RouteService(private val connection: Connection) : Service {
             val statement = connection.prepareStatement(UPDATE_ROUTE)
             statement.setString(1, obj.name)
             statement.setString(2, obj.color)
-            statement.setArray(3, SQLHelper.prepareArrayFromIntList(connection, obj.stops.map { it.id }))
-            statement.setArray(4, SQLHelper.prepareArrayFromStringList(connection, obj.timeInterval))
-            statement.setArray(5, SQLHelper.prepareArrayFromIntList(connection, obj.machinists.map { it.id }))
-            statement.setArray(6, SQLHelper.prepareArrayFromIntList(connection, obj.dispatchers.map { it.id }))
+            statement.setArray(3, Helper.prepareSQLArrayFromIntList(connection, obj.stops.map { it.id }))
+            statement.setArray(4, Helper.prepareSQLArrayFromStringList(connection, obj.timeInterval))
+            statement.setArray(5, Helper.prepareSQLArrayFromIntList(connection, obj.machinists.map { it.id!! }))
+            statement.setArray(6, Helper.prepareSQLArrayFromIntList(connection, obj.dispatchers.map { it.id!! }))
             statement.setInt(7, obj.id)
             statement.executeUpdate()
         }else {

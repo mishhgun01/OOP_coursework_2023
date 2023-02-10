@@ -7,12 +7,14 @@ import io.ktor.server.application.*
 
 fun Application.configureHTTP() {
     install(CORS) {
+        headersOf("Access-Control-Allow-Origin", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
         allowMethod(HttpMethod.Options)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
         allowHeader(HttpHeaders.Authorization)
-        allowHeader("MyCustomHeader")
+        allowHeader(HttpHeaders.AccessControlAllowOrigin)
+        allowHeader(HttpHeaders.ContentType)
         anyHost()
     }
 }

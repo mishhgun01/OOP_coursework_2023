@@ -11,29 +11,33 @@ import io.ktor.server.routing.*
 fun Route.configureStopsRouting(stopService: Service) {
 
     // Stops
-    route("/api/v1/stops") {
-        get {
-            call.respond(stopService.getAll())
-        }
-        get("{id?}") {
-            val id = call.parameters["id"] ?: return@get call.respond(stopService.getAll())
-            val stop = stopService.getById(id.toInt())
-            call.respond(stop)
-        }
-        post {
-            val stop = call.receive<Stop>()
-            stopService.create(stop)
-            call.respondText("Stop stored correctly", status = HttpStatusCode.Created)
-        }
-        patch {
-            val stop = call.receive<Stop>()
-            stopService.update(stop)
-            call.respondText("Stop updated correctly", status = HttpStatusCode.Created)
-        }
-        delete("{id?}") {
-            val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
-            stopService.delete(id.toInt())
-            call.respondText("Stop deleted correctly", status = HttpStatusCode.OK)
+    route("/api") {
+        route("/v1") {
+            route("/stops") {
+                get {
+                    call.respond(stopService.getAll())
+                }
+                get("{id?}") {
+                    val id = call.parameters["id"] ?: return@get call.respond(stopService.getAll())
+                    val stop = stopService.getById(id.toInt())
+                    call.respond(stop)
+                }
+                post {
+                    val stop = call.receive<Stop>()
+                    stopService.create(stop)
+                    call.respondText("Stop stored correctly", status = HttpStatusCode.Created)
+                }
+                patch {
+                    val stop = call.receive<Stop>()
+                    stopService.update(stop)
+                    call.respondText("Stop updated correctly", status = HttpStatusCode.Created)
+                }
+                delete("{id?}") {
+                    val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                    stopService.delete(id.toInt())
+                    call.respondText("Stop deleted correctly", status = HttpStatusCode.OK)
+                }
+            }
         }
     }
 }

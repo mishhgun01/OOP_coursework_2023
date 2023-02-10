@@ -18,5 +18,6 @@ fun Application.configureRouting() {
         configureRolesRouting(roleService)
         configureRoutesRouting(routeService)
         configureStopsRouting(stopService)
+        configureAuthRouting(employeeService)
     }
 }

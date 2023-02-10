@@ -57,7 +57,13 @@ class RoleService(private val connection: Connection) : Service {
          if (obj is Role) {
              val statement = connection.prepareStatement(INSERT_ROLES)
              statement.setString(1, obj.name)
-             statement.executeUpdate()
+             statement.executeQuery()
+             val resultSet = statement.resultSet
+             if(resultSet.next()) {
+                 return@withContext resultSet.getInt(1)
+             } else {
+                 throw Exception("error in creating employee")
+             }
          } else {
              throw Exception("error in create role")
          }
