@@ -1,17 +1,14 @@
 package com.example.controller
 
-import com.example.model.AbstractService
-import com.example.model.Employee
+import com.example.model.Service
 import com.example.model.Route
-import com.example.model.RouteService
-import connectToPostgres
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun io.ktor.server.routing.Route.configureRoutesRouting(routeService: AbstractService) {
+fun io.ktor.server.routing.Route.configureRoutesRouting(routeService: Service) {
 
     route("/api/v1/routes"){
         get("{id?}") {

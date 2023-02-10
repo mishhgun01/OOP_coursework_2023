@@ -1,17 +1,14 @@
 package com.example.controller
 
-import com.example.model.AbstractService
+import com.example.model.Service
 import com.example.model.Stop
-import com.example.model.StopService
-import connectToPostgres
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.sql.Connection
 
-fun Route.configureStopsRouting(stopService: AbstractService) {
+fun Route.configureStopsRouting(stopService: Service) {
 
     // Stops
     route("/api/v1/stops") {

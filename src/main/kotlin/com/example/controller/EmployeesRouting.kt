@@ -1,6 +1,6 @@
 package com.example.controller
 
-import com.example.model.AbstractService
+import com.example.model.Service
 import com.example.model.Employee
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -8,7 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Route.configureEmployeesRouting(employeeService: AbstractService) {
+fun Route.configureEmployeesRouting(employeeService: Service) {
 
     route("/api/v1/employees") {
         get("{id?}") {

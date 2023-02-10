@@ -8,7 +8,7 @@ import java.sql.Connection
 @Serializable
 data class Stop(val id: Int, val name: String, val lat: Double,val lon: Double, val timeInterval: Int, val isEnd: Boolean)
 
-class StopService(private val connection: Connection): AbstractService(connection) {
+class StopService(private val connection: Connection): Service {
     companion object {
         private const val CREATE_TABLE_STOPS = "CREATE TABLE IF NOT EXISTS stops(" +
                 "id SERIAL PRIMARY KEY, name TEXT NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL," +

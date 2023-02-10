@@ -1,5 +1,6 @@
 package com.example.model
 
+import com.example.plugins.SQLHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -7,9 +8,9 @@ import java.sql.Connection
 
 @Serializable
 data class Employee(val id: Int, val name: String, val role: Role,
-                    val workingDays: List<Int>, val login: String, val password: String): SQLHelper, Any()
+                    val workingDays: List<Int>, val login: String, val password: String)
 
-class EmployeeService(private val connection: Connection): AbstractService(connection) {
+class EmployeeService(private val connection: Connection): Service {
 
     companion object {
         private const val CREATE_TABLE_EMPLOYEES =
@@ -85,7 +86,7 @@ class EmployeeService(private val connection: Connection): AbstractService(conne
              val statement = connection.prepareStatement(INSERT_EMPLOYEE)
              statement.setString(1, obj.name)
              statement.setInt(2, obj.role.id)
-             statement.setArray(3,obj.prepareArrayFromIntList(connection, obj.workingDays))
+             statement.setArray(3, SQLHelper.prepareArrayFromIntList(connection, obj.workingDays))
              statement.setString(4, obj.login)
              statement.setString(5, obj.password)
              statement.executeUpdate()
@@ -99,7 +100,7 @@ class EmployeeService(private val connection: Connection): AbstractService(conne
              val statement = connection.prepareStatement(UPDATE_EMPLOYEE)
              statement.setString(1, obj.name)
              statement.setInt(2, obj.role.id)
-             statement.setArray(3, obj.prepareArrayFromIntList(connection, obj.workingDays))
+             statement.setArray(3, SQLHelper.prepareArrayFromIntList(connection, obj.workingDays))
              statement.setString(4, obj.login)
              statement.setString(5, obj.password)
              statement.executeUpdate()

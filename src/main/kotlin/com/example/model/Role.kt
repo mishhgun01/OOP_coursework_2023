@@ -9,7 +9,7 @@ import java.sql.Connection
 data class Role(val id: Int, val name: String)
 
 
-class RoleService(private val connection: Connection) : AbstractService(connection) {
+class RoleService(private val connection: Connection) : Service {
 
     companion object {
         private const val CREATE_TABLE_ROLES =

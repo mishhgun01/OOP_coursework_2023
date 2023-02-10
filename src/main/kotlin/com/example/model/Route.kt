@@ -1,5 +1,6 @@
 package com.example.model
 
+import com.example.plugins.SQLHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -7,9 +8,9 @@ import java.sql.Connection
 
 @Serializable
 data class Route(val id: Int, val name: String, val color: String, val stops: List<Stop>, val timeInterval: List<String>,
-                 val machinists: List<Employee>, val dispatchers: List<Employee>): SQLHelper
+                 val machinists: List<Employee>, val dispatchers: List<Employee>)
 
-class RouteService(private val connection: Connection) : AbstractService(connection) {
+class RouteService(private val connection: Connection) : Service {
 
     companion object {
         private const val CREATE_TABLE_ROUTES = "CREATE TABLE IF NOT EXISTS routes( id SERIAL PRIMARY KEY," +
@@ -96,10 +97,10 @@ class RouteService(private val connection: Connection) : AbstractService(connect
             val statement = connection.prepareStatement(INSERT_ROUTE)
             statement.setString(1, obj.name)
             statement.setString(2, obj.color)
-            statement.setArray(3, obj.prepareArrayFromIntList(connection, obj.stops.map { it.id }))
-            statement.setArray(4, obj.prepareArrayFromStringList(connection, obj.timeInterval))
-            statement.setArray(5, obj.prepareArrayFromIntList(connection, obj.machinists.map { it.id }))
-            statement.setArray(6, obj.prepareArrayFromIntList(connection, obj.dispatchers.map { it.id }))
+            statement.setArray(3, SQLHelper.prepareArrayFromIntList(connection, obj.stops.map { it.id }))
+            statement.setArray(4, SQLHelper.prepareArrayFromStringList(connection, obj.timeInterval))
+            statement.setArray(5, SQLHelper.prepareArrayFromIntList(connection, obj.machinists.map { it.id }))
+            statement.setArray(6, SQLHelper.prepareArrayFromIntList(connection, obj.dispatchers.map { it.id }))
             statement.executeUpdate()
         } else {
             throw Exception("error in create role")
@@ -111,10 +112,10 @@ class RouteService(private val connection: Connection) : AbstractService(connect
             val statement = connection.prepareStatement(UPDATE_ROUTE)
             statement.setString(1, obj.name)
             statement.setString(2, obj.color)
-            statement.setArray(3, obj.prepareArrayFromIntList(connection, obj.stops.map { it.id }))
-            statement.setArray(4, obj.prepareArrayFromStringList(connection, obj.timeInterval))
-            statement.setArray(5, obj.prepareArrayFromIntList(connection, obj.machinists.map { it.id }))
-            statement.setArray(6, obj.prepareArrayFromIntList(connection, obj.dispatchers.map { it.id }))
+            statement.setArray(3, SQLHelper.prepareArrayFromIntList(connection, obj.stops.map { it.id }))
+            statement.setArray(4, SQLHelper.prepareArrayFromStringList(connection, obj.timeInterval))
+            statement.setArray(5, SQLHelper.prepareArrayFromIntList(connection, obj.machinists.map { it.id }))
+            statement.setArray(6, SQLHelper.prepareArrayFromIntList(connection, obj.dispatchers.map { it.id }))
             statement.setInt(7, obj.id)
             statement.executeUpdate()
         }else {

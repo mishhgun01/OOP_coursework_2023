@@ -1,17 +1,14 @@
 package com.example.controller
 
-import com.example.model.AbstractService
+import com.example.model.Service
 import com.example.model.Role
-import com.example.model.RoleService
-import connectToPostgres
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.sql.Connection
 
-fun Route.configureRolesRouting(roleService: AbstractService) {
+fun Route.configureRolesRouting(roleService: Service) {
     route("/api/v1/roles") {
         // Roles
         get("/{id?}") {
