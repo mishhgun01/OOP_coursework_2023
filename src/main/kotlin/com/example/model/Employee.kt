@@ -20,7 +20,7 @@ class EmployeeService(private val connection: Connection): Service {
         private const val SELECT_EMPLOYEE_BY_ID = "SELECT * FROM employees WHERE id = ?"
         private const val SELECT_EMPLOYEE = "SELECT * FROM employees;"
         private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id, working_days, login, password)" +
-                "VALUES (?, ?, ?, ?, ?)"
+                "VALUES (?, ?, ?, ?, ?) RETURNING id;"
         private const val UPDATE_EMPLOYEE = "UPDATE employees SET fullname = ?, role_id = ?, working_days = ?, login = ?, password = ?" +
                 " WHERE id = ?"
         private const val DELETE_EMPLOYEE = "DELETE FROM employees WHERE id = ?"
