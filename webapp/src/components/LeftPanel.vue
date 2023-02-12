@@ -39,6 +39,7 @@ export default {
 
 <style scoped>
 .edit{
+  width: 10px;
   margin-left: 5px;
   background: none;
   border: black 1px solid;

@@ -3,6 +3,7 @@ package com.example.controller
 import com.example.filework.Logger
 import com.example.model.Employee
 import com.example.model.EmployeeService
+import com.example.model.UserForAuth
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -24,7 +25,7 @@ fun Route.configureAuthRouting(employeeService: EmployeeService) {
                     call.respond(id)
                 }
                  patch {
-                    val employee = call.receive<Employee>()
+                    val employee = call.receive<UserForAuth>()
                      val id = employeeService.authEmployee(employee)
                      var answerString = ""
                      val logging: Job = launch { Logger("logger.log").upload("user $employee is trying to auth...$answerString") }

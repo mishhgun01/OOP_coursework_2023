@@ -1,13 +1,16 @@
 package com.example.model
 
+import com.example.filework.Logger
 import com.example.plugins.Helper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
 
 @Serializable
-data class Employee(val id: Int? = null, val name: String, val role: Role, val responsibility: String?,
+data class Employee(val id: Int? = null, val name: String, val role: Role, val responsibility: String? = "",
                     val workingDays: List<Int>? = mutableListOf<Int>(), val login: String, val password: String)
 
 class EmployeeService(private val connection: Connection): Service {
@@ -15,12 +18,12 @@ class EmployeeService(private val connection: Connection): Service {
     companion object {
         private const val CREATE_TABLE_EMPLOYEES =
             "CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, fullname TEXT NOT NULL," +
-                    "role_id INTEGER REFERENCES roles(id), responsibility TEXT NOT NULL," +
+                    "role_id INTEGER REFERENCES roles(id), responsibility TEXT NOT NULL DEFAULT ''," +
                     "working_days integer[] NOT NULL DEFAULT array[]::integer[], login TEXT NOT NULL, password TEXT NOT NULL);"
         private const val SELECT_EMPLOYEE_BY_ID = "SELECT * FROM employees WHERE id = ?"
         private const val SELECT_EMPLOYEE = "SELECT * FROM employees;"
-        private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id,responsibility, working_days, responsibility, login, password)" +
-                "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id;"
+        private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id,responsibility, working_days, login, password)" +
+                "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;"
         private const val UPDATE_EMPLOYEE = "UPDATE employees SET fullname = ?, role_id = ?, responsibility = ?, working_days = ?, login = ?, password = ?" +
                 " WHERE id = ?"
         private const val DELETE_EMPLOYEE = "DELETE FROM employees WHERE id = ?"
@@ -125,14 +128,14 @@ class EmployeeService(private val connection: Connection): Service {
          statement.executeUpdate()
     }
 
-    suspend fun authEmployee(obj: Employee): Int = withContext(Dispatchers.IO) {
+    suspend fun authEmployee(obj: UserForAuth): Int = withContext(Dispatchers.IO) {
         val statement =connection.prepareStatement("SELECT id, password FROM employees WHERE login=?;")
         statement.setString(1, obj.login)
         statement.executeQuery()
         val resultSet = statement.resultSet
         if (resultSet.next()) {
-            val pwd = resultSet.getString(2)
             val id = resultSet.getInt(1)
+            val pwd = resultSet.getString(2)
             if (Helper.compareHashes(obj.password, pwd)) {
                 return@withContext id
             } else {

@@ -108,6 +108,7 @@ export default {
     getData() {
       this.$http.get(url + "/api/v1/employees").then(response => {
         this.employees = response && response.data ? response.data : []
+        console.log(response.data)
       })
       this.$http.get(url+"/api/v1/stops").then(response=>{
         this.stops = response&&response.data?response.data:[]
