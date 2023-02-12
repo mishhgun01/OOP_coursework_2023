@@ -14,10 +14,10 @@ class Helper {
             return connection.createArrayOf("text", list.toTypedArray())
         }
         fun convertSQLArrayToIntList(resultSet: ResultSet, arrayName: String): List<Int> {
-            val rs = resultSet.getArray(arrayName).getResultSet()
+            val rs = resultSet.getArray(arrayName).resultSet
             val workingDays = mutableListOf<Int>()
             while (rs.next()) {
-                workingDays.add(rs.getInt(1))
+                workingDays.add(rs.getInt(2))
             }
             return workingDays
         }
@@ -26,7 +26,7 @@ class Helper {
             val rs = resultSet.getArray(arrayName).getResultSet()
             val workingDays = mutableListOf<String>()
             while (rs.next()) {
-                workingDays.add(rs.getString(1))
+                workingDays.add(rs.getString(2))
             }
             return workingDays
         }

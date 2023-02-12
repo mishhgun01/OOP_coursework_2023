@@ -1,28 +1,163 @@
 <template>
-  <l-map style="height: 300px" :zoom="zoom" :center="center">
-    <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
-    <l-marker :lat-lng="markerLatLng"></l-marker>
-  </l-map>
+  <div style="display: flex; flex-direction: row; justify-content: flex-start">
+    <div class="map">
+      <l-map style="width:100%; height: 100%" :zoom="zoom" :center="center">
+        <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
+        <l-control position="topleft" >
+          <sidebar-panel :object="employees"/>
+        </l-control>
+        <div v-for="stop in stops" :key="stop.id">
+          <l-marker
+            :lat-lng="{lat: stop.lat, lon: stop.lon}"
+            :icon="consts.ICON_STOP_DEFAULT"
+            @click="onStopClicked(stop)"
+          >
+            <l-tooltip class="map-tooltip" id="stop-tooltip">
+              <div class="map-tooltip__block">
+                <div class="map-tooltip__item">
+                  <img src="@/components/icons/flag.svg" alt="flag">
+                    {{stop.name || "Без Названия, ID:" + stop.id}}
+                </div>
+                <div class="map-tooltip__item">
+                  <img src="@/components/icons/clock.svg" alt="flag">
+                    {{`Время ожидания: ${stop.timeInterval} ${stop.timeInterval<5?'минуты':'минут'}`}}
+                </div>
+                <div class="map-tooltip__item" v-if="stop.isEnd">
+                  Конечная
+                </div>
+              </div>
+            </l-tooltip>
+              </l-marker>
+        </div>
+        <l-polyline
+          v-for="(e,idx) in edges"
+          :key="`edge${idx}`"
+          :lat-lngs="[{lat: e.from.lat, lon: e.from.lon}, {lat: e.to.lat, lon: e.to.lon}]"
+          :color="e.color"
+          :weight="4"
+          :opacity="2"
+          @click="onEdgeClicked(e)"
+        >
+          <l-tooltip class="map-tooltip">
+            <div class="map-tooltip__block">
+              <div class="map-tooltip__item">
+                <img src="@/components/icons/path.svg" alt="flag">
+                {{`${e.from.name} - ${e.to.name}`}}
+              </div>
+              <div class="map-tooltip__item">
+                <img src="@/components/icons/metro.svg" alt="flag">
+                {{'Ветка: '+e.routeName || "Без Названия, ID:" + e.routeID}}
+              </div>
+              <div class="map-tooltip__item">
+                <img src="@/components/icons/clock.svg" alt="flag">
+                {{`Интервал движения: ${e.timeInterval.join('-')}`}}
+              </div>
+              <div class="map-tooltip__item" v-if="e.machinists">
+                Машинисты: {{e.machinists.join(',')}}
+              </div>
+              <div class="map-tooltip__item" v-if="e.dispatchers">
+                Диспетчеры: {{e.dispatchers.join(',')}}
+              </div>
+            </div>
+          </l-tooltip>
+        </l-polyline>
+      </l-map>
+    </div>
+  </div>
 </template>
 
 <script>
-import L from 'leaflet'
-import Vue from "vue";
-import {LMap, LPolyline, LTooltip, LIcon, LLayerGroup, LTileLayer, LMarker} from "vue2-leaflet";
+import "leaflet";
+import "leaflet/dist/leaflet.css";
+
+import { LMap, LTileLayer, LMarker, LControl, LPolyline, LTooltip } from "vue2-leaflet";
+import LeftPanel from "@/components/LeftPanel.vue";
 import {url} from "@/main";
-Vue.component('l-map', LMap);
-Vue.component('l-tile-layer', LTileLayer);
-Vue.component('l-marker', LMarker);
+import SidebarPanel from "@/components/SidebarPanel.vue";
+import consts from "@/helpers/consts";
+import createEdgesFromList from "@/helpers/createEdge";
+
 export default {
-  name: "MainView",
+  name: "Map",
+  computed: {
+    consts() {
+      return consts
+    }
+  },
+  components: {SidebarPanel, LeftPanel, LMap, LTileLayer, LMarker, LControl, LPolyline, LTooltip },
+  data: function() {
+    return {
+      zoom: 12,
+      center: [59.93428, 30.335098],
+      url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png",
+      attribution: "&copy; <a href='http://osm.org/copyrighte'>OpenStreetMap</a> contributors",
+      employees: [],
+      stops: [],
+      routes: [],
+      edges: []
+    }
+  },
   created() {
-    this.$http.post(url+"/api/v1/authentication", {name: "testAuth", login: "sdfg", password: "password", role: {id:1, name: "машинист"}}).then(resp=>{
-      console.log(resp.data)
-    })
+    this.getData()
+    var el = document.getElementById("stop-tooltip");
+    el.addEventListener('click', function() {
+      console.log("click");
+    });
+  },
+  methods: {
+    getData() {
+      this.$http.get(url + "/api/v1/employees").then(response => {
+        this.employees = response && response.data ? response.data : []
+      })
+      this.$http.get(url+"/api/v1/stops").then(response=>{
+        this.stops = response&&response.data?response.data:[]
+        console.log(response.data)
+      })
+      this.$http.get(url+"/api/v1/routes").then(response=>{
+        this.routes = response&&response.data?response.data:[]
+        console.log(response.data)
+        let edges = []
+        response.data.forEach(r=>{
+          edges.push(createEdgesFromList(r))
+        })
+        console.log(edges)
+        this.edges = edges.flat()
+        console.log(this.edges)
+      })
+    },
+    onStopClicked(s) {
+      console.log(s)
+    },
+    onEdgeClicked(e) {
+      console.log(e)
+    }
   }
 }
 </script>
 
+<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.map {
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+}
+
+.map-tooltip__block {
+  padding: 5px 0;
+  border-bottom: 1px solid $grey-light;
+  position: relative;
+}
+
+.map-tooltip__block:last-child {
+  border-bottom: none;
+}
+
+.map-tooltip__item {
+  display: flex;
+  height: 28px;
+  line-height: 28px;
+  padding: 0 15px 0 10px;
+}
 
 </style>

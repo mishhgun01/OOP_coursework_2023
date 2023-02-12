@@ -1,7 +1,10 @@
 package com.example.model
 
+import com.example.filework.Logger
 import com.example.plugins.Helper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
@@ -32,6 +35,7 @@ class RouteService(private val connection: Connection) : Service {
 
     override suspend fun getAll() = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_ALL_ROUTES)
+        statement.executeQuery()
         val resultSet = statement.resultSet
 
         val allEmployees = EmployeeService(connection).getAll()
@@ -39,23 +43,23 @@ class RouteService(private val connection: Connection) : Service {
 
         val routeList = mutableListOf<Route>()
         while (resultSet.next()) {
-            val id = resultSet.getInt("id")
+            val idx = resultSet.getInt("id")
             val name = resultSet.getString("name")
             val color = resultSet.getString("color")
 
             val stops = Helper.convertSQLArrayToIntList(resultSet, "stop_ids")
                 .map { id:Int -> allStops.filter { it.id==id } }
-                .flatMap { it }
+                .flatten()
 
             val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
             val machinists = Helper.convertSQLArrayToIntList(resultSet, "machinist_ids")
                 .map { id: Int -> allEmployees.filter { it.id == id } }
-                .flatMap { it }
+                .flatten()
 
             val dispatchers = Helper.convertSQLArrayToIntList(resultSet, "dispatcher_ids")
                 .map { id: Int -> allEmployees.filter { it.id == id } }
                 .flatMap { it }
-            routeList.add(Route(id, name, color, stops, timeInterval, machinists, dispatchers))
+            routeList.add(Route(idx, name, color, stops, timeInterval, machinists, dispatchers))
         }
         return@withContext routeList
     }

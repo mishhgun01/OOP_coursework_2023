@@ -8,7 +8,7 @@ class Logger(val path: String): FileWorker {
         val file = File(path)
         val text = info.toString()
 
-        FileWriter(file).use { it.write(text) }
+        FileWriter(file).use { it.append("\n"+text) }
     }
 
     override fun getFromFile(path: String): Any {
