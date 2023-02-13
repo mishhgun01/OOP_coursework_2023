@@ -113,6 +113,7 @@ export default {
     getData() {
       this.$http.get(url+"/api/v1/roles").then(response=>{
         const roles = response&&response.data? response.data : []
+        localStorage.setItem('roles', JSON.stringify(roles))
         this.roles = roles.map(r=>{
           return {
             id: r.id,
@@ -121,7 +122,6 @@ export default {
             value: r
           }
         })
-        console.log(this.roles)
       })
     },
     onRegister() {
@@ -132,6 +132,9 @@ export default {
         password: hash(this.password),
         responsibility: this.responsibility}).then(response=>{
           if (response&&response.data!==0) {
+            this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
+              localStorage.setItem('user', JSON.stringify(response.data))
+            })
             this.$router.push("/map")
           }
       })

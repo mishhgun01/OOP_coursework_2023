@@ -4,7 +4,7 @@
       <l-map style="width:100%; height: 100%" :zoom="zoom" :center="center">
         <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
         <l-control position="topleft" >
-          <sidebar-panel :object="employees"/>
+          <sidebar-panel/>
         </l-control>
         <div v-for="stop in stops" :key="stop.id">
           <l-marker
@@ -87,6 +87,7 @@ export default {
   components: {SidebarPanel, LeftPanel, LMap, LTileLayer, LMarker, LControl, LPolyline, LTooltip },
   data: function() {
     return {
+      user: null,
       zoom: 12,
       center: [59.93428, 30.335098],
       url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png",
@@ -98,6 +99,10 @@ export default {
     }
   },
   created() {
+    this.user = localStorage.getItem('user')
+    if (!this.user) {
+      this.$router.push("/login")
+    }
     this.getData()
     var el = document.getElementById("stop-tooltip");
     el.addEventListener('click', function() {
@@ -108,22 +113,20 @@ export default {
     getData() {
       this.$http.get(url + "/api/v1/employees").then(response => {
         this.employees = response && response.data ? response.data : []
-        console.log(response.data)
+        localStorage.setItem("employees", JSON.stringify(response.data))
       })
       this.$http.get(url+"/api/v1/stops").then(response=>{
         this.stops = response&&response.data?response.data:[]
-        console.log(response.data)
+        localStorage.setItem("stops", JSON.stringify(response.data))
       })
       this.$http.get(url+"/api/v1/routes").then(response=>{
         this.routes = response&&response.data?response.data:[]
-        console.log(response.data)
+        localStorage.setItem("routes", JSON.stringify(response.data))
         let edges = []
         response.data.forEach(r=>{
           edges.push(createEdgesFromList(r))
         })
-        console.log(edges)
         this.edges = edges.flat()
-        console.log(this.edges)
       })
     },
     onStopClicked(s) {

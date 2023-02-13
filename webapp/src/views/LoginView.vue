@@ -86,15 +86,15 @@ export default {
             value: r
           }
         })
-        console.log(this.roles)
       })
     },
     onLogin() {
       const data = {login: this.login, password: hash(this.password), role: this.role}
-      console.log(data)
       this.$http.patch(url+"/api/v1/authentication", {login: this.login, password: hash(this.password), role: this.role}).then(response=>{
-        console.log(response.data)
         if(response&&response.data!==0) {
+          this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
+            localStorage.setItem('user', JSON.stringify(response.data))
+          })
           this.$router.push("/map")
         } else {
           this.failed = true

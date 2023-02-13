@@ -1,8 +1,6 @@
 export default function createEdgesFromList(obj) {
     let edges = []
-    console.log(obj)
     obj.stops.forEach((s,id)=> {
-        console.log(id)
         if(!s.isEnd || id<obj.stops.length-1) {
             edges.push(Object.assign({}, {
                     from: {lat: s.lat, lon: s.lon, name: s.name},
