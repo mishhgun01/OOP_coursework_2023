@@ -33,7 +33,12 @@ const consts = Object.freeze( {
             text: "Фиолетовая ветка",
             value: "Фиолетовая ветка"
         }
-    ]
+    ],
+    PERMISSIONS: {
+        READ: 1,
+        WRITE: 2,
+        DENIED: 0
+    }
 })
 
 export default consts

@@ -25,6 +25,9 @@
                 <div class="map-tooltip__item" v-if="stop.isEnd">
                   Конечная
                 </div>
+                <div class="map-tooltip__item" v-if="stop.notes">
+                  Объявления: {{stop.notes}}
+                </div>
               </div>
             </l-tooltip>
               </l-marker>
@@ -104,10 +107,6 @@ export default {
       this.$router.push("/login")
     }
     this.getData()
-    var el = document.getElementById("stop-tooltip");
-    el.addEventListener('click', function() {
-      console.log("click");
-    });
   },
   methods: {
     getData() {
@@ -128,6 +127,13 @@ export default {
         })
         this.edges = edges.flat()
       })
+      this.$http.get(url+"/api/v1/roles").then(response=>{
+        localStorage.setItem("roles", JSON.stringify(response.data))
+      })
+      this.$http.get(url+"/api/v1/classification").then(response=>{
+        localStorage.setItem("classes", JSON.stringify(response.data))
+      })
+
     },
     onStopClicked(s) {
       console.log(s)

@@ -12,12 +12,13 @@ fun Application.configureRouting() {
     val roleService = RoleService(dbConnection)
     val routeService = RouteService(dbConnection)
     val stopService = StopService(dbConnection)
-
+    val classificationService = ClassificationService(dbConnection)
     routing {
         configureEmployeesRouting(employeeService)
         configureRolesRouting(roleService)
         configureRoutesRouting(routeService)
         configureStopsRouting(stopService)
         configureAuthRouting(employeeService)
+        configureClassificationRouting(classificationService)
     }
 }

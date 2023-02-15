@@ -23,7 +23,7 @@ class Helper {
         }
 
         fun convertSQLArrayToStringList(resultSet: ResultSet, arrayName: String): List<String> {
-            val rs = resultSet.getArray(arrayName).getResultSet()
+            val rs = resultSet.getArray(arrayName).resultSet
             val workingDays = mutableListOf<String>()
             while (rs.next()) {
                 workingDays.add(rs.getString(2))

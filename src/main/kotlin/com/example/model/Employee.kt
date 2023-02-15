@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 import java.sql.Connection
 
 @Serializable
-data class Employee(val id: Int? = null, val name: String, val role: Role, val responsibility: String? = "",
+data class Employee(val id: Int? = null, val name: String, val role: Role,
                     val workingDays: List<Int>? = mutableListOf<Int>(), val login: String, val password: String)
 
 class EmployeeService(private val connection: Connection): Service {
@@ -18,13 +18,13 @@ class EmployeeService(private val connection: Connection): Service {
     companion object {
         private const val CREATE_TABLE_EMPLOYEES =
             "CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, fullname TEXT NOT NULL," +
-                    "role_id INTEGER REFERENCES roles(id), responsibility TEXT NOT NULL DEFAULT ''," +
+                    "role_id INTEGER REFERENCES roles(id)," +
                     "working_days integer[] NOT NULL DEFAULT array[]::integer[], login TEXT NOT NULL, password TEXT NOT NULL);"
         private const val SELECT_EMPLOYEE_BY_ID = "SELECT * FROM employees WHERE id = ?"
         private const val SELECT_EMPLOYEE = "SELECT * FROM employees;"
-        private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id,responsibility, working_days, login, password)" +
-                "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;"
-        private const val UPDATE_EMPLOYEE = "UPDATE employees SET fullname = ?, role_id = ?, responsibility = ?, working_days = ?, login = ?, password = ?" +
+        private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id, working_days, login, password)" +
+                "VALUES (?, ?, ?, ?, ?) RETURNING id;"
+        private const val UPDATE_EMPLOYEE = "UPDATE employees SET fullname = ?, role_id = ?, working_days = ?, login = ?, password = ?" +
                 " WHERE id = ?"
         private const val DELETE_EMPLOYEE = "DELETE FROM employees WHERE id = ?"
 
@@ -45,14 +45,13 @@ class EmployeeService(private val connection: Connection): Service {
              val id = resultSet.getInt("id")
              val fullname = resultSet.getString("fullname")
              val roleId = resultSet.getInt("role_id")
-             val responsibility = resultSet.getString("responsibility")
              val workingDays = Helper.convertSQLArrayToIntList(resultSet, "working_days")
              val login = resultSet.getString("login")
              val password = resultSet.getString("password")
 
              val role = rolesList.find { it.id == roleId }
              role?.let {
-                 eList.add(Employee(id, fullname, role,responsibility, workingDays, login, password))
+                 eList.add(Employee(id, fullname, role, workingDays, login, password))
              }
          }
          return@withContext eList
@@ -68,7 +67,6 @@ class EmployeeService(private val connection: Connection): Service {
 
             val fullname = resultSet.getString("fullName")
             val roleId = resultSet.getInt("role_id")
-            val responsibility = resultSet.getString("responsibility")
             val workingDays = Helper.convertSQLArrayToIntList(resultSet, "working_days")
             val login = resultSet.getString("login")
             val password = resultSet.getString("password")
@@ -77,7 +75,7 @@ class EmployeeService(private val connection: Connection): Service {
             val role = rolesList.find { it.id == roleId }
 
             role?.let {
-                return@withContext Employee(id, fullname, it,responsibility, workingDays, login, password)
+                return@withContext Employee(id, fullname, it, workingDays, login, password)
             }
             throw Exception("Error in get")
         }
@@ -91,11 +89,11 @@ class EmployeeService(private val connection: Connection): Service {
              val statement = connection.prepareStatement(INSERT_EMPLOYEE)
              statement.setString(1, obj.name)
              statement.setInt(2, obj.role.id)
-             statement.setString(3, obj.responsibility)
              statement.setArray(4, obj.workingDays?.let { Helper.prepareSQLArrayFromIntList(connection, it) })
              statement.setString(5, obj.login)
              statement.setString(6, obj.password)
              statement.executeQuery()
+             RoleService(connection).create(obj.role)
              val resultSet = statement.resultSet
              if(resultSet.next()) {
                  return@withContext resultSet.getInt(1)
@@ -112,11 +110,11 @@ class EmployeeService(private val connection: Connection): Service {
              val statement = connection.prepareStatement(UPDATE_EMPLOYEE)
              statement.setString(1, obj.name)
              statement.setInt(2, obj.role.id)
-             statement.setString(3, obj.responsibility)
              statement.setArray(4, obj.workingDays?.let { Helper.prepareSQLArrayFromIntList(connection, it) })
              statement.setString(5, obj.login)
              statement.setString(6, obj.password)
              statement.executeUpdate()
+             RoleService(connection).update(obj.role)
          } else {
              throw Exception("error in updating employee")
          }

@@ -51,6 +51,7 @@
 import {BButton, BFormSelect} from "bootstrap-vue";
 import {url} from "@/main";
 import hash from "@/helpers/helpers";
+import checkUserPermissions from "@/helpers/checkPermissions";
 
 export default {
   name: "LoginView",
@@ -89,11 +90,12 @@ export default {
       })
     },
     onLogin() {
-      const data = {login: this.login, password: hash(this.password), role: this.role}
-      this.$http.patch(url+"/api/v1/authentication", {login: this.login, password: hash(this.password), role: this.role}).then(response=>{
+      const data = {login: this.login, password: hash(this.password)}
+      this.$http.patch(url+"/api/v1/authentication", data).then(response=>{
         if(response&&response.data!==0) {
           this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
             localStorage.setItem('user', JSON.stringify(response.data))
+            localStorage.setItem('user_permissions', checkUserPermissions(response.data))
           })
           this.$router.push("/map")
         } else {
