@@ -3,7 +3,7 @@
     <div class="map">
       <l-map style="width:100%; height: 100%" :zoom="zoom" :center="center">
         <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
-        <l-control position="topleft" >
+        <l-control position="topleft">
           <sidebar-panel/>
         </l-control>
         <div v-for="stop in stops" :key="stop.id">
@@ -25,7 +25,7 @@
                 <div class="map-tooltip__item" v-if="stop.isEnd">
                   Конечная
                 </div>
-                <div class="map-tooltip__item" v-if="stop.notes">
+                <div class="map-tooltip__item" v-if="stop.notes && stop.notes.length">
                   Объявления: {{stop.notes}}
                 </div>
               </div>
@@ -98,7 +98,8 @@ export default {
       employees: [],
       stops: [],
       routes: [],
-      edges: []
+      edges: [],
+      permissions: null
     }
   },
   created() {
@@ -106,6 +107,7 @@ export default {
     if (!this.user) {
       this.$router.push("/login")
     }
+    this.permissions = JSON.parse(localStorage.getItem('user_permissions'))
     this.getData()
   },
   methods: {
@@ -153,20 +155,10 @@ export default {
   width: 100vw;
 }
 
-.map-tooltip__block {
-  padding: 5px 0;
-  border-bottom: 1px solid $grey-light;
-  position: relative;
-}
-
-.map-tooltip__block:last-child {
-  border-bottom: none;
-}
-
 .map-tooltip__item {
   display: flex;
-  height: 28px;
-  line-height: 28px;
+  height: 30px;
+  line-height: 30px;
   padding: 0 15px 0 10px;
 }
 
