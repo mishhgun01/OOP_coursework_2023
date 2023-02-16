@@ -13,6 +13,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
+/**
+ * Extension-функция, расширяющая класс Route для авторизации и регистрации сотрудника.
+ * @param employeeService - сервис для взаимодействия с БД.
+ */
+
 fun Route.configureAuthRouting(employeeService: EmployeeService) {
     route("/api") {
         route("/v1") {

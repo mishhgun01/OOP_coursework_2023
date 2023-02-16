@@ -8,6 +8,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Extension-функция, расширяющая класс Route для маршрутизации запросов, касающихся сотрудников.
+ * @param employeeService - сервис для взаимодействия с БД.
+ */
 fun Route.configureEmployeesRouting(employeeService: Service) {
 
     route("/api") {

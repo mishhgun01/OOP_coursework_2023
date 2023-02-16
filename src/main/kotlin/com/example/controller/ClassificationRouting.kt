@@ -8,6 +8,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Extension-функция, расширяющая класс Route для маршрутизации запросов, касающихся классификации.
+ * @param classificationService - сервис для взаимодействия с БД.
+ */
 fun Route.configureClassificationRouting(classificationService: Service) {
     route("/api") {
         route("/v1") {

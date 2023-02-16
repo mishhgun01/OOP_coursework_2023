@@ -6,11 +6,24 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
 
+/**
+ * Класс классификации.
+ * @property id - уникальный идентификатор классификации.
+ * @property name - название / имя классификации.
+ */
 @Serializable
 data class Classification(val id: Int, val name: String)
 
+/**
+ * Класс для создания интерфейса между API БД.
+ * @property connection - соединенние с БД.
+ * Реализует интерфейс @see Service.
+ */
 class ClassificationService(private val connection: Connection): Service {
 
+    /**
+     * Статические переменные класса.
+     */
     companion object {
         private const val CREATE_TABLE_CLASSIFICATION =
             "CREATE TABLE IF NOT EXISTS classification (id SERIAL PRIMARY KEY, name TEXT NOT NULL);"
@@ -20,10 +33,20 @@ class ClassificationService(private val connection: Connection): Service {
         private const val UPDATE_CLASSIFICATION = "UPDATE classification SET name = ? WHERE id = ?;"
     }
 
+    /**
+     * Метод, срабатывающий при инициализации объекта.
+     */
     init {
         val statement = connection.createStatement()
         statement.executeUpdate(CREATE_TABLE_CLASSIFICATION)
     }
+
+    /**
+     * Метод получения объекта из БД по уникальному идентификатору.
+     * @param id - уникальный идентификатор объекта.
+     * @return возвращает объект типа @see Classification.
+     * @throws Exception("no classifications with $id found")
+     */
     override suspend fun getById(id: Int): Classification = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_CLASSIFICATION_BY_ID)
         statement.setInt(1,id)
@@ -37,6 +60,10 @@ class ClassificationService(private val connection: Connection): Service {
         }
     }
 
+    /**
+     * Метод получения всех объектов из БД.
+     * @return возвращает список типа @see Classification.
+     */
     override suspend fun getAll(): List<Classification> = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_CLASSIFICATION)
 
@@ -47,8 +74,15 @@ class ClassificationService(private val connection: Connection): Service {
             val id = resultSet.getInt("id")
             classList.add(Classification(id, name))
         }
-        return@withContext classList    }
+        return@withContext classList
+    }
 
+    /**
+     * Метод создания нового объекта в БД.
+     * @param obj - объект типа @see Classification.
+     * @return возвращает уникальный идентификатор созданного объекта.
+     * @throws Exception("error in creating classification")
+     */
     override suspend fun create(obj: Any): Int = withContext(Dispatchers.IO) {
         if (obj is Classification) {
         val statement = connection.prepareStatement(INSERT_CLASSIFICATION)
@@ -65,6 +99,12 @@ class ClassificationService(private val connection: Connection): Service {
     }
     }
 
+
+    /**
+     * Метод обновления данного объекта в БД.
+     * @param obj - объект типа @see Classification.
+     * @throws Exception("error in updating classification")
+     */
     override suspend fun update(obj: Any): Unit = withContext(Dispatchers.IO) {
         if (obj is Classification) {
             val statement = connection.prepareStatement(UPDATE_CLASSIFICATION)
@@ -72,9 +112,14 @@ class ClassificationService(private val connection: Connection): Service {
             statement.setInt(2, obj.id)
             statement.executeUpdate()
         } else {
-            throw Exception("error in update classification")
+            throw Exception("error in updating classification")
         }
     }
 
+
+    /**
+     * Метод удаления объекта в БД по уникальному идентификатору.
+     * @throws Exception("Not Allowed")
+     */
     override suspend fun delete(id: Int) = throw Exception("Not Allowed")
 }

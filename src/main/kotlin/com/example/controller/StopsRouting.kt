@@ -8,6 +8,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Extension-функция, расширяющая класс Route для маршрутизации запросов, касающихся остановок.
+ * @param stopService - сервис для взаимодействия с БД.
+ */
 fun Route.configureStopsRouting(stopService: Service) {
 
     // Stops

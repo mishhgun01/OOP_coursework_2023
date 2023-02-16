@@ -8,6 +8,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Extension-функция, расширяющая класс Route для маршрутизации запросов, касающихся маршрутов.
+ * @param routeService - сервис для взаимодействия с БД.
+ */
 fun io.ktor.server.routing.Route.configureRoutesRouting(routeService: Service) {
 
     route("/api") {

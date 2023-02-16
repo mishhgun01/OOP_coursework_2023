@@ -8,6 +8,9 @@
         @input-change="handleInput"
     >
   </b-editable-table>
+    <div class="d-flex justify-content-center mt-5">
+    <b-button class="btn-smaller" pill variant="outline-success" @click="moveToRegister">Сохранить</b-button>
+    </div>
   </div>
 </template>
 
@@ -15,11 +18,13 @@
 import {url} from "@/main";
 
 import BEditableTable from "bootstrap-vue-editable-table";
+import {BButton} from "bootstrap-vue";
 import checkUserPermissions from "@/helpers/checkPermissions";
 export default {
   name: "StopsView",
   components: {
-    BEditableTable
+    BEditableTable,
+    BButton
   },
   data() {
     return {
@@ -28,7 +33,7 @@ export default {
           key: "id",
           label: "ID",
           type: "number",
-          editable: false
+          editable: true
         },
         {
           key: "name",
@@ -88,7 +93,7 @@ export default {
         }
       ],
       stops: [],
-      editable: false,
+      editable: true,
       user: null
     }
   },
@@ -98,7 +103,7 @@ export default {
       this.getStops()
     }
     this.user = JSON.parse(localStorage.getItem('user'))
-    this.editable = checkUserPermissions(this.user).stops === 2
+    this.editable =checkUserPermissions(this.user).stops === 1
   },
   methods: {
     getStops() {
@@ -106,6 +111,10 @@ export default {
         this.stops = response&&response.data?response.data:[]
         localStorage.setItem("stops", JSON.stringify(response.data))
       })
+    },
+    handleInput(value, data) {
+      console.log(value)
+      console.log(data)
     }
   }
 }

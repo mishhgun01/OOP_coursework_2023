@@ -9,6 +9,10 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Extension-функция, расширяющая класс Route для маршрутизации запросов, касающихся ролей.
+ * @param roleService - сервис для взаимодействия с БД.
+ */
 fun Route.configureRolesRouting(roleService: Service) {
     route("/api") {
         route("/v1"){

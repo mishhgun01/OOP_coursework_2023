@@ -1,20 +1,35 @@
 package com.example.model
 
-import com.example.filework.Logger
 import com.example.plugins.Helper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
 
+/**
+ * Класс маршрута.
+ * @property id - уникальный идентификатоор сотрудника.
+ * @property name - полное имя сотрудника.
+ * @property color - цвет маршрута в формате HEX.
+ * @property stops - список остановок на маршруте.
+ * @property timeInterval - интервалы движения в формате ['HH.MM', 'HH.MM'].
+ * @property machinists - машинисты, работающие на данном маршруте.
+ * @property dispatchers - диспетчеры, работающие на данном маршруте.
+ */
 @Serializable
 data class Route(val id: Int, val name: String, val color: String, val stops: List<Stop>, val timeInterval: List<String>,
                  val machinists: List<Employee>, val dispatchers: List<Employee>)
 
+/**
+ * Класс для создания интерфейса между API БД.
+ * @property connection - соединенние с БД.
+ * Реализует интерфейс @see Service.
+ */
 class RouteService(private val connection: Connection) : Service {
 
+    /**
+     * Статические переменные класса.
+     */
     companion object {
         private const val CREATE_TABLE_ROUTES = "CREATE TABLE IF NOT EXISTS routes( id SERIAL PRIMARY KEY," +
                 "name TEXT NOT NULL, color TEXT NOT NULL, stop_ids integer[], time_interval text[]," +
@@ -28,11 +43,18 @@ class RouteService(private val connection: Connection) : Service {
         private const val DELETE_ROUTE = "DELETE FROM routes WHERE id = ?;"
     }
 
+    /**
+     * Метод, срабатывающий при инициализации объекта.
+     */
     init {
         val statement = connection.createStatement()
         statement.executeUpdate(CREATE_TABLE_ROUTES)
     }
 
+    /**
+     * Метод получения всех сотрудников из БД.
+     * @return возвращает список объектов типа @see Route.
+     */
     override suspend fun getAll() = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_ALL_ROUTES)
         statement.executeQuery()
@@ -64,6 +86,12 @@ class RouteService(private val connection: Connection) : Service {
         return@withContext routeList
     }
 
+    /**
+     * Метод получения объекта из БД по уникальному идентификатору.
+     * @param id - уникальный идентификатор объекта.
+     * @return возвращает объект типа @see Employee.
+     * @throws Exception("no routes with id = $id found").
+     */
     override suspend fun getById(id: Int) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_ROUTE_BY_ID)
         statement.setInt(1, id)
@@ -92,10 +120,16 @@ class RouteService(private val connection: Connection) : Service {
                 .flatMap { it }
             return@withContext Route(id, name, color, stops, timeInterval, machinists, dispatchers)
         } else {
-            throw Exception("ERROR in get routes by id = $id")
+            throw Exception("no routes with id = $id found")
         }
     }
 
+    /**
+     * Метод создания нового объекта в БД.
+     * @param obj - объект типа @see Route.
+     * @return возвращает уникальный идентификатор созданного объекта.
+     * @throws Exception("error in creating route")
+     */
     override suspend fun create(obj: Any) = withContext(Dispatchers.IO){
         if (obj is Route) {
             val statement = connection.prepareStatement(INSERT_ROUTE)
@@ -110,12 +144,17 @@ class RouteService(private val connection: Connection) : Service {
             if(resultSet.next()) {
                 return@withContext resultSet.getInt(1)
             } else {
-                throw Exception("error in creating employee")
+                throw Exception("error in creating route")
             }        } else {
-            throw Exception("error in create role")
+            throw Exception("error in create route")
         }
     }
 
+    /**
+     * Метод обновления данного объекта в БД.
+     * @param obj - объект типа @see Employee.
+     * @throws Exception("error in updating route")
+     */
     override suspend fun update(obj: Any): Unit = withContext(Dispatchers.IO) {
         if (obj is Route) {
             val statement = connection.prepareStatement(UPDATE_ROUTE)
@@ -128,10 +167,14 @@ class RouteService(private val connection: Connection) : Service {
             statement.setInt(7, obj.id)
             statement.executeUpdate()
         }else {
-            throw Exception("error in update role")
+            throw Exception("error in updating route")
         }
     }
 
+    /**
+     * Метод удаления объекта в БД по уникальному идентификатору.
+     * @param id - уникальный идентификатор объекта.
+     */
     override suspend fun delete(id: Int): Unit = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(DELETE_ROUTE)
         statement.setInt(1, id)

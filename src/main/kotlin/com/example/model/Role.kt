@@ -6,12 +6,24 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
 
+/**
+ * Класс роли.
+ * @property id - уникальный идентификатор роли.
+ * @property name - название / имя роли.
+ */
 @Serializable
 data class Role(val id: Int, val name: String, val classification: Classification)
 
-
+/**
+ * Класс для создания интерфейса между API БД.
+ * @property connection - соединенние с БД.
+ * Реализует интерфейс @see Service.
+ */
 class RoleService(private val connection: Connection) : Service {
 
+    /**
+     * Статические переменные класса.
+     */
     companion object {
         private const val CREATE_TABLE_ROLES =
             "CREATE TABLE IF NOT EXISTS roles (id SERIAL PRIMARY KEY, name TEXT NOT NULL, classification_id INTEGER REFERENCES classification(id));"
@@ -22,11 +34,18 @@ class RoleService(private val connection: Connection) : Service {
 
     }
 
+    /**
+     * Метод, срабатывающий при инициализации объекта.
+     */
     init {
         val statement = connection.createStatement()
         statement.executeUpdate(CREATE_TABLE_ROLES)
     }
 
+    /**
+     * Метод получения всех ролей из БД.
+     * @return возвращает список объектов типа @see Role.
+     */
      override suspend fun getAll() : List<Role> = withContext(Dispatchers.IO){
         val statement = connection.prepareStatement(SELECT_ROLES)
 
@@ -43,6 +62,12 @@ class RoleService(private val connection: Connection) : Service {
         return@withContext rolesList
     }
 
+    /**
+     * Метод получения объекта из БД по уникальному идентификатору.
+     * @param id - уникальный идентификатор объекта.
+     * @return возвращает объект типа @see Role.
+     * @throws Exception("No roles with id=$id found").
+     */
      override suspend fun getById(id: Int): Role =  withContext(Dispatchers.IO){
         val statement = connection.prepareStatement(SELECT_ROLE_BY_ID)
         statement.setInt(1, id)
@@ -56,12 +81,18 @@ class RoleService(private val connection: Connection) : Service {
              classification?.let {
                  return@withContext Role(id, name, it)
              }
-             throw Exception("no roles found")
+             throw Exception("No roles with id=$id found")
         } else {
-            throw Exception("No roles found by id=$id")
+            throw Exception("No roles with id=$id found")
         }
     }
 
+    /**
+     * Метод создания нового объекта в БД.
+     * @param obj - объект типа @see Role
+     * @return возвращает уникальный идентификатор созданного объекта.
+     * @throws Exception("error in creating role")
+     */
      override suspend fun create(obj: Any): Int = withContext(Dispatchers.IO) {
          if (obj is Role) {
              val statement = connection.prepareStatement(INSERT_ROLES)
@@ -75,10 +106,15 @@ class RoleService(private val connection: Connection) : Service {
                  throw Exception("error in creating role")
              }
          } else {
-             throw Exception("error in create role")
+             throw Exception("error in creating role")
          }
     }
 
+    /**
+     * Метод обновления данного объекта в БД.
+     * @param obj - объект типа @see Role.
+     * @throws Exception("error in updating role")
+     */
      override suspend fun update(obj: Any): Unit = withContext(Dispatchers.IO) {
          if (obj is Role) {
              val statement = connection.prepareStatement(UPDATE_ROLES)
@@ -91,5 +127,9 @@ class RoleService(private val connection: Connection) : Service {
          }
      }
 
+    /**
+     * Метод обновления данного объекта в БД.
+     * @throws Exception("Not Allowed")
+     */
     override suspend fun delete(id: Int) = throw Exception("Not Allowed")
 }
