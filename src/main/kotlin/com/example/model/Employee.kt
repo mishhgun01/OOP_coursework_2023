@@ -20,7 +20,8 @@ import java.sql.Connection
 @Serializable
 data class Employee(val id: Int? = null, val name: String, val role: Role,
                     val workingDays: List<Int>? = mutableListOf(), val login: String,
-                    val password: String, val routeIds: List<Int>? = mutableListOf()
+                    val password: String, val routeIds: List<Int>? = mutableListOf(),
+                    val classification: Classification
 )
 
 /**
@@ -37,12 +38,13 @@ class EmployeeService(private val connection: Connection): Service {
         private const val CREATE_TABLE_EMPLOYEES =
             "CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, fullname TEXT NOT NULL," +
                     "role_id INTEGER REFERENCES roles(id)," +
-                    "working_days integer[] NOT NULL DEFAULT array[]::integer[], login TEXT NOT NULL, password TEXT NOT NULL, route_ids integer[] NOT NULL DEFAULT array[]::integer[]);"
+                    "working_days integer[] NOT NULL DEFAULT array[]::integer[], login TEXT NOT NULL, password TEXT NOT NULL, route_ids integer[] NOT NULL DEFAULT array[]::integer[]," +
+                    "classification_id INTEGER REFERENCES classification(id));"
         private const val SELECT_EMPLOYEE_BY_ID = "SELECT * FROM employees WHERE id = ?;"
         private const val SELECT_EMPLOYEE = "SELECT * FROM employees;"
-        private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id, working_days, login, password, route_ids)" +
-                "VALUES (?, ?, ?, ?, ?, ?) RETURNING id;"
-        private const val UPDATE_EMPLOYEE = "UPDATE employees SET fullname = ?, role_id = ?, working_days = ?, login = ?, password = ?, role_ids = ?" +
+        private const val INSERT_EMPLOYEE = "INSERT INTO employees (fullname, role_id, working_days, login, password, route_ids, classification_id)" +
+                "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id;"
+        private const val UPDATE_EMPLOYEE = "UPDATE employees SET fullname = ?, role_id = ?, working_days = ?, login = ?, password = ?, role_ids = ?, classification_id = ?" +
                 " WHERE id = ?;"
         private const val DELETE_EMPLOYEE = "DELETE FROM employees WHERE id = ?"
 
@@ -66,6 +68,7 @@ class EmployeeService(private val connection: Connection): Service {
 
          val rolesList = RoleService(connection).getAll()
          val eList = mutableListOf<Employee>()
+        val classificationsList = ClassificationService(connection).getAll()
          while(resultSet.next()) {
              val id = resultSet.getInt("id")
              val fullname = resultSet.getString("fullname")
@@ -74,10 +77,14 @@ class EmployeeService(private val connection: Connection): Service {
              val login = resultSet.getString("login")
              val password = resultSet.getString("password")
              val routeIds = Helper.convertSQLArrayToIntList(resultSet, "route_ids")
+             val classId = resultSet.getInt("classification_id")
 
-             val role = rolesList.find { it.id == roleId }
-             role?.let {
-                 eList.add(Employee(id, fullname, role, workingDays, login, password, routeIds))
+             val classfication = classificationsList.find { it.id==classId }
+             classfication?.let {
+                 val role = rolesList.find { it.id == roleId }
+                 role?.let {
+                     eList.add(Employee(id, fullname, role, workingDays, login, password, routeIds, classfication))
+                 }
              }
          }
          return@withContext eList
@@ -95,6 +102,7 @@ class EmployeeService(private val connection: Connection): Service {
 
         val resultSet = statement.executeQuery()
 
+        val classificationsList = ClassificationService(connection).getAll()
         if (resultSet.next()) {
 
             val fullname = resultSet.getString("fullName")
@@ -106,9 +114,13 @@ class EmployeeService(private val connection: Connection): Service {
             val rolesList = RoleService(connection).getAll()
             val role = rolesList.find { it.id == roleId }
             val routeIds = Helper.convertSQLArrayToIntList(resultSet, "route_ids")
+            val classId = resultSet.getInt("classification_id")
 
-            role?.let {
-                return@withContext Employee(id, fullname, it, workingDays, login, password, routeIds)
+            val classfication = classificationsList.find { it.id==classId }
+            classfication?.let {
+                role?.let {
+                    return@withContext Employee(id, fullname, it, workingDays, login, password, routeIds, classfication)
+                }
             }
             throw Exception("No employees with id=$id found")
         }
@@ -132,8 +144,8 @@ class EmployeeService(private val connection: Connection): Service {
              statement.setString(4, obj.login)
              statement.setString(5, obj.password)
              statement.setArray(6, obj.routeIds?.let { Helper.prepareSQLArrayFromIntList(connection, it) })
+             statement.setInt(7, obj.classification.id)
              statement.executeQuery()
-             RoleService(connection).create(obj.role)
              val resultSet = statement.resultSet
              if(resultSet.next()) {
                  return@withContext resultSet.getInt(1)
@@ -159,6 +171,7 @@ class EmployeeService(private val connection: Connection): Service {
              statement.setString(4, obj.login)
              statement.setString(5, obj.password)
              statement.setArray(6, obj.routeIds?.let { Helper.prepareSQLArrayFromIntList(connection, it) })
+             statement.setInt(7, obj.classification.id)
              statement.executeUpdate()
              RoleService(connection).update(obj.role)
          } else {

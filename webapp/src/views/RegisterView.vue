@@ -30,12 +30,21 @@
       />
     </div>
     <div class="input">
+      <label for="password">Классификация</label>
+      <b-form-select
+          id="inline-form-custom-select-pref"
+          class="form-control"
+          :options="classifications"
+          v-model="classification"
+      />
+    </div>
+    <div class="input">
       <label for="password">Ответственен за</label>
       <b-form-select
           id="inline-form-custom-select-pref"
           class="form-control"
-          :options="consts.RESPONSIBILITIES"
-          v-model="responsibility"
+          :options="routes"
+          v-model="route"
       />
     </div>
     <div class="input">
@@ -92,7 +101,11 @@ export default {
       login: "",
       password: "",
       role: null,
-      responsibility: ""
+      responsibility: "",
+      classifications: [],
+      classification: null,
+      routes: [],
+      route: null
     }
   },
   computed: {
@@ -100,14 +113,11 @@ export default {
       return consts
     },
     disable() {
-      return !this.login || !this.password || !this.role || !this.name || !this.lastname || !this.responsibility
+      return !this.login || !this.password || !this.role || !this.name || !this.lastname || !this.classification || !this.route
     }
   },
   created() {
     this.getData()
-  },
-  updated() {
-    console.log(this.role)
   },
   methods: {
     getData() {
@@ -123,17 +133,61 @@ export default {
           }
         })
       })
+      this.$http.get(url+"/api/v1/routes").then(response=>{
+        const routes = response&&response.data? response.data : []
+        localStorage.setItem('routes', JSON.stringify(routes))
+        this.routes = routes.map(r=>{
+          return {
+            id: r.id,
+            name: r.name,
+            text: r.name,
+            value: r
+          }
+        })
+        console.log(this.routes)
+      })
+      this.$http.get(url+"/api/v1/classification").then(response=>{
+        const classifications = response&&response.data? response.data : []
+        localStorage.setItem('classifications', JSON.stringify(classifications))
+        this.classifications = classifications.map(r=>{
+          return {
+            id: r.id,
+            name: r.name,
+            text: r.name,
+            value: r
+          }
+        })
+      })
     },
     onRegister() {
+      console.log(this.classification)
       this.$http.post(url+"/api/v1/authentication", {
         name: `${this.name} ${this.lastname}`,
         role: this.role,
         login: this.login,
         password: hash(this.password),
-        responsibility: this.responsibility}).then(response=>{
+        classification: this.classification,
+        route_ids: this.route.id}).then(response=>{
           if (response&&response.data!==0) {
             this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
               localStorage.setItem('user', JSON.stringify(response.data))
+              const route = this.routes.find(r=>r.id===this.route.id)
+              switch (this.role.id) {
+                case 1:
+                  route.value.dispatchers.push(response.data)
+                      break;
+                case 2:
+                  route.value.machinists.push(response.data)
+                      break;
+              }
+              this.$http.patch(url+"/api/v1/routes", route.value).then(response=>{
+                if(response&&response.data.length) {
+                  this.$http.get(url + "/api/v1/routes").then(response => {
+                    const routes = response && response.data ? response.data : []
+                    localStorage.setItem('routes', JSON.stringify(routes))
+                  })
+                }
+              })
             })
             this.$router.push("/map")
           }

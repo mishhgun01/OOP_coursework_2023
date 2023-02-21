@@ -8,8 +8,8 @@ import java.sql.Connection
 
 /**
  * Класс маршрута.
- * @property id - уникальный идентификатоор сотрудника.
- * @property name - полное имя сотрудника.
+ * @property id - уникальный идентификатоор маршрута.
+ * @property name - название маршрута.
  * @property color - цвет маршрута в формате HEX.
  * @property stops - список остановок на маршруте.
  * @property timeInterval - интервалы движения в формате ['HH.MM', 'HH.MM'].

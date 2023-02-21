@@ -1,6 +1,5 @@
 package com.example.model
 
-import com.example.plugins.Helper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -12,7 +11,7 @@ import java.sql.Connection
  * @property name - название / имя роли.
  */
 @Serializable
-data class Role(val id: Int, val name: String, val classification: Classification)
+data class Role(val id: Int, val name: String)
 
 /**
  * Класс для создания интерфейса между API БД.
@@ -26,11 +25,11 @@ class RoleService(private val connection: Connection) : Service {
      */
     companion object {
         private const val CREATE_TABLE_ROLES =
-            "CREATE TABLE IF NOT EXISTS roles (id SERIAL PRIMARY KEY, name TEXT NOT NULL, classification_id INTEGER REFERENCES classification(id));"
+            "CREATE TABLE IF NOT EXISTS roles (id SERIAL PRIMARY KEY, name TEXT NOT NULL);"
         private const val SELECT_ROLES = "SELECT * FROM roles"
         private const val SELECT_ROLE_BY_ID = "SELECT * FROM roles WHERE id=?;"
-        private const val INSERT_ROLES = "INSERT INTO roles (name, classification_id) VALUES (?, ?);"
-        private const val UPDATE_ROLES = "UPDATE roles SET name = ?, classification_id=? WHERE id = ?;"
+        private const val INSERT_ROLES = "INSERT INTO roles (name) VALUES (?);"
+        private const val UPDATE_ROLES = "UPDATE roles SET name =? WHERE id = ?;"
 
     }
 
@@ -51,13 +50,10 @@ class RoleService(private val connection: Connection) : Service {
 
         val resultSet = statement.executeQuery()
         val rolesList = mutableListOf<Role>()
-        val classes = ClassificationService(connection).getAll()
         while(resultSet.next()) {
             val name = resultSet.getString("name")
             val id = resultSet.getInt("id")
-            val classification_id = resultSet.getInt("classification_id")
-            val classification = classes.find { it.id==classification_id }
-            classification?.let { Role(id, name, it) }?.let { rolesList.add(it) }
+            rolesList.add(Role(id,name))
         }
         return@withContext rolesList
     }
@@ -75,13 +71,7 @@ class RoleService(private val connection: Connection) : Service {
         val resultSet = statement.executeQuery()
          if (resultSet.next()) {
             val name = resultSet.getString("name")
-             val classification_id = resultSet.getInt("classification_id")
-             val classes = ClassificationService(connection).getAll()
-             val classification = classes.find { it.id==classification_id }
-             classification?.let {
-                 return@withContext Role(id, name, it)
-             }
-             throw Exception("No roles with id=$id found")
+             return@withContext Role(id, name)
         } else {
             throw Exception("No roles with id=$id found")
         }
@@ -97,7 +87,6 @@ class RoleService(private val connection: Connection) : Service {
          if (obj is Role) {
              val statement = connection.prepareStatement(INSERT_ROLES)
              statement.setString(1, obj.name)
-             statement.setInt(2, obj.classification.id)
              statement.executeQuery()
              val resultSet = statement.resultSet
              if(resultSet.next()) {
@@ -120,7 +109,6 @@ class RoleService(private val connection: Connection) : Service {
              val statement = connection.prepareStatement(UPDATE_ROLES)
              statement.setString(1, obj.name)
              statement.setInt(2, obj.id)
-             statement.setInt(3, obj.classification.id)
              statement.executeUpdate()
          }else {
              throw Exception("error in update role")

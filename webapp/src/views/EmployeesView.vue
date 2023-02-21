@@ -48,21 +48,6 @@ export default {
           })
         },
         {
-          key: "responsibility",
-          label: "responsibility",
-          type: "select",
-          editable: true,
-          placeholder: "Choose responsibility",
-          class: "age-col",
-          options: JSON.parse(localStorage.getItem('routes')).map(r=>{
-            return {
-              id: r.id,
-              value: r.id,
-              text: r.name
-            }
-          })
-        },
-        {
           key: "classification",
           label: "role.classification",
           type: "select",
@@ -105,17 +90,17 @@ export default {
     };
   },
   created() {
-    console.log(JSON.parse(localStorage.getItem('routes')))
+    console.log(JSON.parse(localStorage.getItem('roles')))
     console.log(JSON.parse(localStorage.getItem('classes')))
     console.log((JSON.parse(localStorage.getItem('employees'))))
+    console.log(JSON.parse(localStorage.getItem('employees')))
     this.employees = JSON.parse(localStorage.getItem('employees')).map(emp=>{
       return {
         id: emp.id,
         name: emp.name,
         role: emp.role.id,
-        responsibility: emp.responsibility,
         workingDays: emp.workingDays,
-        classification: emp.role.classification.id
+        classification: emp.classification.id
       }
     })
     const roles = JSON.parse(localStorage.getItem('roles'))

@@ -128,6 +128,7 @@ export default {
           edges.push(createEdgesFromList(r))
         })
         this.edges = edges.flat()
+        console.log(this.edges)
       })
       this.$http.get(url+"/api/v1/roles").then(response=>{
         localStorage.setItem("roles", JSON.stringify(response.data))
