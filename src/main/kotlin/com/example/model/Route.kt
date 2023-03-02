@@ -59,9 +59,7 @@ class RouteService(private val connection: Connection) : Service {
         statement.executeQuery()
         val resultSet = statement.resultSet
 
-        val allEmployees = EmployeeService(connection).getAll()
         val allStops = StopService(connection).getAll()
-        val allSequences = RouteEmployeeService(connection).getAll()
         val routeList = mutableListOf<Route>()
         while (resultSet.next()) {
             val idx = resultSet.getInt("id")
@@ -96,9 +94,7 @@ class RouteService(private val connection: Connection) : Service {
         statement.executeQuery()
         val resultSet = statement.resultSet
 
-        val allEmployees = EmployeeService(connection).getAll()
         val allStops = StopService(connection).getAll()
-        val allSequences = RouteEmployeeService(connection).getAll()
         if (resultSet.next()) {
             val id = resultSet.getInt("id")
             val name = resultSet.getString("name")
