@@ -111,7 +111,7 @@ class RoleService(private val connection: Connection) : Service {
              statement.setInt(2, obj.id)
              statement.executeUpdate()
          }else {
-             throw Exception("error in update role")
+             throw Exception("error in updateByRoute role")
          }
      }
 

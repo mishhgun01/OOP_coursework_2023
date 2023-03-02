@@ -77,7 +77,7 @@ class EmployeeService(private val connection: Connection): Service {
              val login = resultSet.getString("login")
              val password = resultSet.getString("password")
              val classId = resultSet.getInt("classification_id")
-             val routes = RouteEmployeeService(connection).getByEmployeeID(id).route
+             val routes = RouteEmployeeService(connection).getByEmployeeId(id).route
              val classfication = classificationsList.find { it.id==classId }
              classfication?.let {
                  val role = rolesList.find { it.id == roleId }
@@ -112,7 +112,7 @@ class EmployeeService(private val connection: Connection): Service {
 
             val rolesList = RoleService(connection).getAll()
             val role = rolesList.find { it.id == roleId }
-            val routes = RouteEmployeeService(connection).getByEmployeeID(id).route
+            val routes = RouteEmployeeService(connection).getByEmployeeId(id).route
             val classId = resultSet.getInt("classification_id")
 
             val classfication = classificationsList.find { it.id==classId }

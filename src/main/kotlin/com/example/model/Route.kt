@@ -70,9 +70,9 @@ class RouteService(private val connection: Connection) : Service {
                 .map { id:Int -> allStops.filter { it.id==id } }
                 .flatten()
 
-            val machinists = RouteEmployeeService(connection).getById(idx)
+            val machinists = RouteEmployeeService(connection).getByRouteId(idx)
                 .employee.filter { it.role.id == 2 }
-            val dispatchers = RouteEmployeeService(connection).getById(idx)
+            val dispatchers = RouteEmployeeService(connection).getByRouteId(idx)
                 .employee.filter { it.role.id == 1 }
 
             val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
@@ -105,9 +105,9 @@ class RouteService(private val connection: Connection) : Service {
                 .flatMap { it }
 
             val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
-            val machinists = RouteEmployeeService(connection).getById(id)
+            val machinists = RouteEmployeeService(connection).getByRouteId(id)
                 .employee.filter {it.role.id == 2}
-            val dispatchers = RouteEmployeeService(connection).getById(id)
+            val dispatchers = RouteEmployeeService(connection).getByRouteId(id)
                 .employee.filter {it.role.id == 1}
 
             return@withContext Route(id, name, color, stops, timeInterval, machinists, dispatchers)
@@ -159,9 +159,9 @@ class RouteService(private val connection: Connection) : Service {
             statement.executeUpdate()
 
             val sequenceOfMachinists = RouteEmployee(mutableListOf(obj), obj.machinists)
-            RouteEmployeeService(connection).update(sequenceOfMachinists)
+            RouteEmployeeService(connection).updateByRoute(sequenceOfMachinists)
             val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj), obj.dispatchers)
-            RouteEmployeeService(connection).update(sequenceOfDispatchers)
+            RouteEmployeeService(connection).updateByRoute(sequenceOfDispatchers)
         }else {
             throw Exception("error in updating route")
         }
