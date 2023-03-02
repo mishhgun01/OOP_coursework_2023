@@ -95,7 +95,7 @@ export default {
         if(response&&response.data!==0) {
           this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
             localStorage.setItem('user', JSON.stringify(response.data))
-            localStorage.setItem('user_permissions', checkUserPermissions(response.data))
+            localStorage.setItem('user_permissions', JSON.stringify(checkUserPermissions(response.data)))
           })
           this.$router.push("/map")
         } else {

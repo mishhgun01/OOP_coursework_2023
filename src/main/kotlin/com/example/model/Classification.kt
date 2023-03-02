@@ -1,11 +1,9 @@
 package com.example.model
 
-import io.ktor.network.sockets.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
-
 /**
  * Класс классификации.
  * @property id - уникальный идентификатор классификации.

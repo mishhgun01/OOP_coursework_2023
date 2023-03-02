@@ -79,6 +79,7 @@ import {url} from "@/main";
 import SidebarPanel from "@/components/SidebarPanel.vue";
 import consts from "@/helpers/consts";
 import createEdgesFromList from "@/helpers/createEdge";
+import checkUserPermissions from "@/helpers/checkPermissions";
 
 export default {
   name: "Map",
@@ -103,11 +104,14 @@ export default {
     }
   },
   created() {
-    this.user = localStorage.getItem('user')
+    console.log(localStorage.getItem('user'))
+    this.user = JSON.parse(localStorage.getItem('user'))
+    console.log(this.user)
     if (!this.user) {
       this.$router.push("/login")
     }
-    this.permissions = JSON.parse(localStorage.getItem('user_permissions'))
+    this.permissions = checkUserPermissions(this.user)
+    console.log(this.permissions)
     this.getData()
   },
   methods: {
@@ -115,6 +119,7 @@ export default {
       this.$http.get(url + "/api/v1/employees").then(response => {
         this.employees = response && response.data ? response.data : []
         localStorage.setItem("employees", JSON.stringify(response.data))
+        console.log(response.data)
       })
       this.$http.get(url+"/api/v1/stops").then(response=>{
         this.stops = response&&response.data?response.data:[]

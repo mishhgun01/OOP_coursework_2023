@@ -18,7 +18,7 @@ import java.sql.Connection
  */
 @Serializable
 data class Stop(val id: Int, val name: String, val lat: Double,val lon: Double,
-                val timeInterval: Int, val isEnd: Boolean, val notes: List<String>? = mutableListOf()
+                val timeInterval: Int, val isEnd: Boolean, val notes: String? = ""
 )
 
 /**
@@ -34,12 +34,12 @@ class StopService(private val connection: Connection): Service {
     companion object {
         private const val CREATE_TABLE_STOPS = "CREATE TABLE IF NOT EXISTS stops(" +
                 "id SERIAL PRIMARY KEY, name TEXT NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL," +
-                "time_interval INTEGER NOT NULL, is_end BOOLEAN DEFAULT FALSE, notes text[] NOT NULL DEFAULT array[]::text[]);"
+                "time_interval INTEGER NOT NULL, is_end BOOLEAN DEFAULT FALSE, notes text NOT NULL DEFAULT '');"
         private const val SELECT_ALL_STOPS = "SELECT * FROM stops;"
         private const val SELECT_STOP_BY_ID = "SELECT * FROM stops WHERE id = ?;"
         private const val INSERT_STOP = "INSERT INTO stops(name, lat, lon, time_interval, is_end, notes)" +
                 "VALUES (?, ?, ?, ?, ?, ?);"
-        private const val UPDATE_STOP = "UPDATE stops SET name = ?, lat = ?, lon = ?, time_interval = ?, is_end = ?, notes = ?"
+        private const val UPDATE_STOP = "UPDATE stops SET name = ?, lat = ?, lon = ?, time_interval = ?, is_end = ?, notes = ? WHERE id = ?"
         private const val DELETE_STOP = "DELETE FROM stops WHERE id = ?;"
     }
 
@@ -68,7 +68,7 @@ class StopService(private val connection: Connection): Service {
             val lon = resultSet.getDouble("lon")
             val timeInterval = resultSet.getInt("time_interval")
             val isEnd = resultSet.getBoolean("is_end")
-            val notes = Helper.convertSQLArrayToStringList(resultSet, "notes")
+            val notes = resultSet.getString("notes")
             stopsList.add(Stop(id, name, lat, lon, timeInterval, isEnd, notes))
         }
         return@withContext stopsList
@@ -91,7 +91,7 @@ class StopService(private val connection: Connection): Service {
             val lon = resultSet.getDouble("lon")
             val timeInterval = resultSet.getInt("time_interval")
             val isEnd = resultSet.getBoolean("is_end")
-            val notes = Helper.convertSQLArrayToStringList(resultSet, "notes")
+            val notes = resultSet.getString("notes")
             return@withContext Stop(id, name, lat, lon, timeInterval, isEnd, notes)
         } else {
             throw Exception("No stops with id=$id found")
@@ -112,7 +112,7 @@ class StopService(private val connection: Connection): Service {
             statement.setDouble(3, obj.lon)
             statement.setInt(4, obj.timeInterval)
             statement.setBoolean(5, obj.isEnd)
-            statement.setArray(6, obj.notes?.let { Helper.prepareSQLArrayFromStringList(connection, it) })
+            statement.setString(6, obj.notes)
             statement.executeUpdate()
         } else {
             throw Exception("error in creating stop")
@@ -132,7 +132,8 @@ class StopService(private val connection: Connection): Service {
             statement.setDouble(3, obj.lon)
             statement.setInt(4, obj.timeInterval)
             statement.setBoolean(5, obj.isEnd)
-            statement.setArray(6, obj.notes?.let { Helper.prepareSQLArrayFromStringList(connection, it) })
+            statement.setString(6, obj.notes)
+            statement.setInt(7, obj.id)
             statement.executeUpdate()
         } else {
             throw Exception("error in updating role")

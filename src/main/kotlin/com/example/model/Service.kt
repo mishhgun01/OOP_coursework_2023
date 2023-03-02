@@ -15,7 +15,7 @@ interface Service  {
      * Метод получения всех объектов из БД.
      * @return возвращает список объектов типа Any.
      */
-    suspend fun getAll(): List<Any>
+    suspend fun getAll(): Any
 
     /**
      * Метод создания нового объекта в БД.

@@ -8,7 +8,7 @@ export default function checkUserPermissions(user) {
     switch (user.role.id) {
         // Диспетчер
         case 1:
-            switch (user.role.classification) {
+            switch (user.classification.id) {
                 // Стажёр
                 case 1:
                     permissionRoutes = consts.PERMISSIONS.READ
@@ -35,7 +35,7 @@ export default function checkUserPermissions(user) {
             break
         // Машинист
         case 2:
-            switch (user.role.classification) {
+            switch (user.classification.id) {
                 // Стажёр
                 case 1:
                     permissionRoutes = consts.PERMISSIONS.READ
@@ -60,5 +60,5 @@ export default function checkUserPermissions(user) {
             }
         break
     }
-    return Object.assign({}, {routes: permissionRoutes, stops: permissionStops, employees: permissionEmployees, roles: permissionRoles})
+    return {routes: permissionRoutes, stops: permissionStops, employees: permissionEmployees, roles: permissionRoles}
 }

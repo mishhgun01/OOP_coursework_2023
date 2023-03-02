@@ -32,13 +32,12 @@ class RouteService(private val connection: Connection) : Service {
      */
     companion object {
         private const val CREATE_TABLE_ROUTES = "CREATE TABLE IF NOT EXISTS routes( id SERIAL PRIMARY KEY," +
-                "name TEXT NOT NULL, color TEXT NOT NULL, stop_ids integer[], time_interval text[]," +
-                "machinist_ids integer[], dispatcher_ids integer[]);"
+                "name TEXT NOT NULL, color TEXT NOT NULL, stop_ids integer[], time_interval text[]);"
         private const val SELECT_ALL_ROUTES = "SELECT * FROM routes;"
         private const val SELECT_ROUTE_BY_ID = "SELECT * FROM routes WHERE id = ?;"
-        private const val INSERT_ROUTE = "INSERT INTO routes(name,  color, stop_ids, time_interval, machinist_ids, dispatcher_ids)" +
-                "VALUES (?, ?, ?, ?, ?, ?);"
-        private const val UPDATE_ROUTE = "UPDATE routes SET name = ?, color = ?, stop_ids = ?, time_interval = ?, machinist_ids = ?, dispatcher_ids = ?" +
+        private const val INSERT_ROUTE = "INSERT INTO routes(name,  color, stop_ids, time_interval)" +
+                "VALUES (?, ?, ?, ?);"
+        private const val UPDATE_ROUTE = "UPDATE routes SET name = ?, color = ?, stop_ids = ?, time_interval = ?" +
                 "WHERE id = ?;"
         private const val DELETE_ROUTE = "DELETE FROM routes WHERE id = ?;"
     }
@@ -62,7 +61,7 @@ class RouteService(private val connection: Connection) : Service {
 
         val allEmployees = EmployeeService(connection).getAll()
         val allStops = StopService(connection).getAll()
-
+        val allSequences = RouteEmployeeService(connection).getAll()
         val routeList = mutableListOf<Route>()
         while (resultSet.next()) {
             val idx = resultSet.getInt("id")
@@ -73,14 +72,13 @@ class RouteService(private val connection: Connection) : Service {
                 .map { id:Int -> allStops.filter { it.id==id } }
                 .flatten()
 
-            val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
-            val machinists = Helper.convertSQLArrayToIntList(resultSet, "machinist_ids")
-                .map { id: Int -> allEmployees.filter { it.id == id } }
-                .flatten()
+            val machinists = RouteEmployeeService(connection).getById(idx)
+                .employee.filter { it.role.id == 2 }
+            val dispatchers = RouteEmployeeService(connection).getById(idx)
+                .employee.filter { it.role.id == 1 }
 
-            val dispatchers = Helper.convertSQLArrayToIntList(resultSet, "dispatcher_ids")
-                .map { id: Int -> allEmployees.filter { it.id == id } }
-                .flatMap { it }
+            val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
+
             routeList.add(Route(idx, name, color, stops, timeInterval, machinists, dispatchers))
         }
         return@withContext routeList
@@ -100,7 +98,7 @@ class RouteService(private val connection: Connection) : Service {
 
         val allEmployees = EmployeeService(connection).getAll()
         val allStops = StopService(connection).getAll()
-
+        val allSequences = RouteEmployeeService(connection).getAll()
         if (resultSet.next()) {
             val id = resultSet.getInt("id")
             val name = resultSet.getString("name")
@@ -111,13 +109,11 @@ class RouteService(private val connection: Connection) : Service {
                 .flatMap { it }
 
             val timeInterval = Helper.convertSQLArrayToStringList(resultSet, "time_interval")
-            val machinists = Helper.convertSQLArrayToIntList(resultSet, "machinist_ids")
-                .map { id: Int -> allEmployees.filter { it.id == id } }
-                .flatMap { it }
+            val machinists = RouteEmployeeService(connection).getById(id)
+                .employee.filter {it.role.id == 2}
+            val dispatchers = RouteEmployeeService(connection).getById(id)
+                .employee.filter {it.role.id == 1}
 
-            val dispatchers = Helper.convertSQLArrayToIntList(resultSet, "dispatcher_ids")
-                .map { id: Int -> allEmployees.filter { it.id == id } }
-                .flatMap { it }
             return@withContext Route(id, name, color, stops, timeInterval, machinists, dispatchers)
         } else {
             throw Exception("no routes with id = $id found")
@@ -137,11 +133,12 @@ class RouteService(private val connection: Connection) : Service {
             statement.setString(2, obj.color)
             statement.setArray(3, Helper.prepareSQLArrayFromIntList(connection, obj.stops.map { it.id }))
             statement.setArray(4, Helper.prepareSQLArrayFromStringList(connection, obj.timeInterval))
-            statement.setArray(5, Helper.prepareSQLArrayFromIntList(connection, obj.machinists.map { it.id!! }))
-            statement.setArray(6, Helper.prepareSQLArrayFromIntList(connection, obj.dispatchers.map { it.id!! }))
-            statement.executeQuery()
             val resultSet = statement.resultSet
-            if(resultSet.next()) {
+            if(resultSet.next())  {
+                val sequenceOfMachinists = RouteEmployee(mutableListOf(obj), obj.machinists)
+                RouteEmployeeService(connection).create(sequenceOfMachinists)
+                val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj), obj.dispatchers)
+                RouteEmployeeService(connection).create(sequenceOfDispatchers)
                 return@withContext resultSet.getInt(1)
             } else {
                 throw Exception("error in creating route")
@@ -162,10 +159,13 @@ class RouteService(private val connection: Connection) : Service {
             statement.setString(2, obj.color)
             statement.setArray(3, Helper.prepareSQLArrayFromIntList(connection, obj.stops.map { it.id }))
             statement.setArray(4, Helper.prepareSQLArrayFromStringList(connection, obj.timeInterval))
-            statement.setArray(5, Helper.prepareSQLArrayFromIntList(connection, obj.machinists.map { it.id!! }))
-            statement.setArray(6, Helper.prepareSQLArrayFromIntList(connection, obj.dispatchers.map { it.id!! }))
             statement.setInt(7, obj.id)
             statement.executeUpdate()
+
+            val sequenceOfMachinists = RouteEmployee(mutableListOf(obj), obj.machinists)
+            RouteEmployeeService(connection).update(sequenceOfMachinists)
+            val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj), obj.dispatchers)
+            RouteEmployeeService(connection).update(sequenceOfDispatchers)
         }else {
             throw Exception("error in updating route")
         }
@@ -178,6 +178,11 @@ class RouteService(private val connection: Connection) : Service {
     override suspend fun delete(id: Int): Unit = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(DELETE_ROUTE)
         statement.setInt(1, id)
+        val obj = getById(id)
+        val sequenceOfMachinists = RouteEmployee(mutableListOf(obj), obj.machinists)
+        RouteEmployeeService(connection).deleteSequence(sequenceOfMachinists)
+        val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj), obj.dispatchers)
+        RouteEmployeeService(connection).deleteSequence(sequenceOfDispatchers)
         statement.executeUpdate()
     }
 }
