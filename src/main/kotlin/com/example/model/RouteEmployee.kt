@@ -1,10 +1,12 @@
 package com.example.model
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.sql.Connection
 
 @Serializable
-data class RouteEmployee(val route : List<Route>, val employee: List<Employee>)
+data class RouteEmployee(val routeIDs : List<Int>, val employeeIDs: List<Int>)
 
 class RouteEmployeeService(private val connection: Connection) {
 
@@ -13,8 +15,8 @@ class RouteEmployeeService(private val connection: Connection) {
                 "route_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, PRIMARY KEY (route_id, employee_id)," +
                 "FOREIGN KEY (route_id) REFERENCES routes(id),"+
                 "FOREIGN KEY (employee_id) REFERENCES employees(id));"
-        private const val GET_ROUTES_BY_EMPLOYEE_ID = "SELECT * FROM route_employees_pkey WHERE route_id = ?;"
-        private const val GET_EMPLOYEE_BY_ROUTE_ID = "SELECT * FROM route_employees_pkey WHERE employee_id = ?;"
+        private const val GET_ROUTES_BY_EMPLOYEE_ID = "SELECT * FROM route_employees_pkey WHERE employee_id = ?;"
+        private const val GET_EMPLOYEE_BY_ROUTE_ID = "SELECT * FROM route_employees_pkey WHERE route_id = ?;"
         private const val INSERT_NEW_SEQUENCE = "INSERT INTO route_employees_pkey(route_id, employee_id) VALUES (?, ?);"
         private const val UPDATE_SEQUENCE_BY_ROUTE = "UPDATE route_employees_pkey SET route_id = ?, employee_id = ? WHERE route_id = ?;"
         private const val UPDATE_SEQUENCE_BY_EMPLOYEE = "UPDATE route_employees_pkey SET route_id = ?, employee_id = ? WHERE employee_id = ?;"
@@ -27,73 +29,62 @@ class RouteEmployeeService(private val connection: Connection) {
         statement.executeUpdate(CREATE_TABLE_ROUTES_EMPLOYEES)
     }
 
-    suspend fun getAll(): RouteEmployee {
+    suspend fun getAll(): RouteEmployee = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(GET_ALL)
         statement.executeQuery()
         val resultSet = statement.resultSet
-        val routesList = mutableListOf<Route>()
-        val employeesList = mutableListOf<Employee>()
-        val routes = RouteService(connection).getAll()
-        val employees = EmployeeService(connection).getAll()
+        val routesList = mutableListOf<Int>()
+        val employeesList = mutableListOf<Int>()
 
         while (resultSet.next()) {
             val routeID = resultSet.getInt("route_id")
             val employeeID = resultSet.getInt("employee_id")
-            routes.find { it.id==routeID }?.let{routesList.add(it)}
-            employees.find {it.id == employeeID}?.let { employeesList.add(it) }
+            routesList.add(routeID)
+            employeesList.add(employeeID)
         }
-        return RouteEmployee(routesList, employeesList)
+        return@withContext RouteEmployee(routesList, employeesList)
     }
 
 
-    suspend fun getByRouteId(id: Int): RouteEmployee {
+    suspend fun getByRouteId(id: Int): RouteEmployee = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(GET_EMPLOYEE_BY_ROUTE_ID)
         statement.setInt(1,id)
         statement.executeQuery()
         val resultSet = statement.resultSet
-
-        val route = RouteService(connection).getById(id)
-        val employees = EmployeeService(connection).getAll()
-        val routes = mutableListOf<Route>()
-        routes.add(route)
-        val employeesOutput = mutableListOf<Employee>()
+        val routes = mutableListOf<Int>()
+        val employees = mutableListOf<Int>()
+        routes.add(id)
         while(resultSet.next()){
             val employeeID = resultSet.getInt("employee_id")
-            employees.find { it.id==employeeID }?.let {
-                employeesOutput.add(it)
-            }
+            employees.add(employeeID)
         }
-        return RouteEmployee(routes, employeesOutput)
+        return@withContext RouteEmployee(routes, employees)
     }
 
 
-    suspend fun getByEmployeeId(id: Int) : RouteEmployee {
+    suspend fun getByEmployeeId(id: Int) : RouteEmployee = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(GET_ROUTES_BY_EMPLOYEE_ID)
         statement.setInt(1,id)
         statement.executeQuery()
         val resultSet = statement.resultSet
 
-        val routes = RouteService(connection).getAll()
-        val employee = EmployeeService(connection).getById(id)
-        val employees = mutableListOf<Employee>()
-        employees.add(employee)
-        val routesOuptut = mutableListOf<Route>()
+        val employees = mutableListOf<Int>()
+        employees.add(id)
+        val routes = mutableListOf<Int>()
         while(resultSet.next()){
             val routeID = resultSet.getInt("route_id")
-            routes.find { it.id==routeID }?.let {
-                routesOuptut.add(it)
-            }
+            routes.add(routeID)
         }
-        return RouteEmployee(routesOuptut, employees)
+        return@withContext RouteEmployee(routes, employees)
     }
 
-    suspend fun create(obj: Any): Int {
+    suspend fun create(obj: Any): Int = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(INSERT_NEW_SEQUENCE)
-        return if (obj is RouteEmployee) {
-            for (route in obj.route) {
-                for (employee in obj.employee) {
-                    statement.setInt(1, route.id)
-                    statement.setInt(2, employee.id!!)
+        return@withContext if (obj is RouteEmployee) {
+            for (routeID in obj.routeIDs) {
+                for (employeeID in obj.employeeIDs) {
+                    statement.setInt(1, routeID)
+                    statement.setInt(2, employeeID)
                     statement.executeUpdate()
                 }
             }
@@ -103,14 +94,14 @@ class RouteEmployeeService(private val connection: Connection) {
         }
     }
 
-    suspend fun updateByRoute(obj: Any) {
+    suspend fun updateByRoute(obj: Any) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(UPDATE_SEQUENCE_BY_ROUTE)
         if (obj is RouteEmployee) {
-            for (route in obj.route) {
-                for (employee in obj.employee) {
-                    statement.setInt(1, route.id)
-                    statement.setInt(2, employee.id!!)
-                    statement.setInt(3, route.id)
+            for (routeID in obj.routeIDs) {
+                for (employeeID in obj.employeeIDs) {
+                    statement.setInt(1, routeID)
+                    statement.setInt(2, employeeID)
+                    statement.setInt(3, routeID)
                     statement.executeUpdate()
                 }
             }
@@ -118,14 +109,14 @@ class RouteEmployeeService(private val connection: Connection) {
             throw Exception()
         }
     }
-    suspend fun updateByEmployee(obj: Any) {
+    suspend fun updateByEmployee(obj: Any) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(UPDATE_SEQUENCE_BY_EMPLOYEE)
         if (obj is RouteEmployee) {
-            for (route in obj.route) {
-                for (employee in obj.employee) {
-                    statement.setInt(1, route.id)
-                    statement.setInt(2, employee.id!!)
-                    statement.setInt(3, employee.id)
+            for (routeID in obj.routeIDs) {
+                for (employeeID in obj.employeeIDs) {
+                    statement.setInt(1, routeID)
+                    statement.setInt(2, employeeID)
+                    statement.setInt(3, employeeID)
                     statement.executeUpdate()
                 }
             }
@@ -134,12 +125,12 @@ class RouteEmployeeService(private val connection: Connection) {
         }
     }
 
-    suspend fun deleteSequence(obj: RouteEmployee) {
+    suspend fun deleteSequence(obj: RouteEmployee) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(DELETE_SEQUENCE)
-        for (route in obj.route) {
-            for (employee in obj.employee) {
-                statement.setInt(1, route.id)
-                statement.setInt(2, employee.id!!)
+        for (routeID in obj.routeIDs) {
+            for (employeeID in obj.employeeIDs) {
+                statement.setInt(1, routeID)
+                statement.setInt(2, employeeID)
                 statement.executeUpdate()
             }
         }

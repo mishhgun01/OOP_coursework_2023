@@ -20,7 +20,7 @@ import java.sql.Connection
 @Serializable
 data class Employee(val id: Int? = null, val name: String, val role: Role,
                     val workingDays: List<Int>? = mutableListOf(), val login: String,
-                    val password: String, val routes: List<Route> = mutableListOf(),
+                    val password: String, var routes: List<Int> = mutableListOf(),
                     val classification: Classification
 )
 
@@ -77,7 +77,8 @@ class EmployeeService(private val connection: Connection): Service {
              val login = resultSet.getString("login")
              val password = resultSet.getString("password")
              val classId = resultSet.getInt("classification_id")
-             val routes = RouteEmployeeService(connection).getByEmployeeId(id).route
+             val routes = RouteEmployeeService(connection).getByEmployeeId(id).routeIDs
+
              val classfication = classificationsList.find { it.id==classId }
              classfication?.let {
                  val role = rolesList.find { it.id == roleId }
@@ -112,8 +113,8 @@ class EmployeeService(private val connection: Connection): Service {
 
             val rolesList = RoleService(connection).getAll()
             val role = rolesList.find { it.id == roleId }
-            val routes = RouteEmployeeService(connection).getByEmployeeId(id).route
             val classId = resultSet.getInt("classification_id")
+            val routes = RouteEmployeeService(connection).getByEmployeeId(id).routeIDs
 
             val classfication = classificationsList.find { it.id==classId }
             classfication?.let {
@@ -132,7 +133,7 @@ class EmployeeService(private val connection: Connection): Service {
      * Метод создания нового объекта в БД.
      * @param obj - объект типа @see Employee.
      * @return возвращает уникальный идентификатор созданного объекта.
-     * @throws Exception("error in creating employee").
+     * @throws Exception("error in creating employeeIDs").
      */
      override suspend fun create(obj: Any): Int = withContext(Dispatchers.IO) {
          if (obj is Employee) {
@@ -144,23 +145,23 @@ class EmployeeService(private val connection: Connection): Service {
              statement.setString(5, obj.password)
              statement.setInt(8, obj.classification.id)
              statement.executeQuery()
-             val sequence = RouteEmployee(obj.routes, mutableListOf(obj))
+             val sequence = RouteEmployee(obj.routes, mutableListOf(obj.id!!))
              RouteEmployeeService(connection).updateByEmployee(sequence)
              val resultSet = statement.resultSet
              if(resultSet.next()) {
                  return@withContext resultSet.getInt(1)
              } else {
-                 throw Exception("error in creating employee")
+                 throw Exception("error in creating employeeIDs")
              }
          } else {
-             throw Exception("error in creating employee")
+             throw Exception("error in creating employeeIDs")
          }
     }
 
     /**
      * Метод обновления данного объекта в БД.
      * @param obj - объект типа @see Employee.
-     * @throws Exception("error in updating employee")
+     * @throws Exception("error in updating employeeIDs")
      */
      override suspend fun update(obj: Any): Unit = withContext(Dispatchers.IO) {
          if (obj is Employee) {
@@ -172,11 +173,11 @@ class EmployeeService(private val connection: Connection): Service {
              statement.setString(5, obj.password)
              statement.setInt(6, obj.classification.id)
              statement.executeUpdate()
-             val sequence = RouteEmployee(obj.routes, mutableListOf(obj))
+             val sequence = RouteEmployee(obj.routes, mutableListOf(obj.id!!))
              RouteEmployeeService(connection).updateByEmployee(sequence)
              RoleService(connection).update(obj.role)
          } else {
-             throw Exception("error in updating employee")
+             throw Exception("error in updating employeeIDs")
          }
     }
 
@@ -188,7 +189,7 @@ class EmployeeService(private val connection: Connection): Service {
          val statement = connection.prepareStatement(DELETE_EMPLOYEE)
          statement.setInt(1, id)
         val employee = getById(id)
-        RouteEmployeeService(connection).deleteSequence(RouteEmployee(employee.routes, mutableListOf(employee)))
+        RouteEmployeeService(connection).deleteSequence(RouteEmployee(employee.routes, mutableListOf(employee.id!!)))
          statement.executeUpdate()
     }
 
