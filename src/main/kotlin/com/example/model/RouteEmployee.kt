@@ -78,19 +78,14 @@ class RouteEmployeeService(private val connection: Connection) {
         return@withContext RouteEmployee(routes, employees)
     }
 
-    suspend fun create(obj: Any): Int = withContext(Dispatchers.IO) {
+    suspend fun create(obj: RouteEmployee) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(INSERT_NEW_SEQUENCE)
-        return@withContext if (obj is RouteEmployee) {
-            for (routeID in obj.routeIDs) {
-                for (employeeID in obj.employeeIDs) {
-                    statement.setInt(1, routeID)
-                    statement.setInt(2, employeeID)
-                    statement.executeUpdate()
-                }
+        for (routeID in obj.routeIDs) {
+            for (employeeID in obj.employeeIDs) {
+                statement.setInt(1, routeID)
+                statement.setInt(2, employeeID)
+                statement.executeUpdate()
             }
-            1
-        } else {
-            0
         }
     }
 
