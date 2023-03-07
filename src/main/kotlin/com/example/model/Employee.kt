@@ -143,13 +143,13 @@ class EmployeeService(private val connection: Connection): Service {
              statement.setArray(3, obj.workingDays?.let { Helper.prepareSQLArrayFromIntList(connection, it) })
              statement.setString(4, obj.login)
              statement.setString(5, obj.password)
-             statement.setInt(8, obj.classification.id)
+             statement.setInt(6, obj.classification.id)
              statement.executeQuery()
              val resultSet = statement.resultSet
              if(resultSet.next()) {
                  val id = resultSet.getInt(1)
                  val sequence = RouteEmployee(obj.routes, mutableListOf(id))
-                 RouteEmployeeService(connection).updateByEmployee(sequence)
+                 RouteEmployeeService(connection).create(sequence)
                  return@withContext id
              } else {
                  throw Exception("error in creating employeeIDs")
@@ -174,8 +174,6 @@ class EmployeeService(private val connection: Connection): Service {
              statement.setString(5, obj.password)
              statement.setInt(6, obj.classification.id)
              statement.executeUpdate()
-             val sequence = RouteEmployee(obj.routes, mutableListOf(obj.id!!))
-             RouteEmployeeService(connection).updateByEmployee(sequence)
              RoleService(connection).update(obj.role)
          } else {
              throw Exception("error in updating employeeIDs")

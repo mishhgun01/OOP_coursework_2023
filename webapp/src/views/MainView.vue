@@ -4,7 +4,7 @@
       <l-map style="width:100%; height: 100%" :zoom="zoom" :center="center">
         <l-tile-layer :url="url" :attribution="attribution"></l-tile-layer>
         <l-control position="topleft">
-          <sidebar-panel/>
+          <sidebar-panel :user="user"/>
         </l-control>
         <div v-for="stop in stops" :key="stop.id">
           <l-marker
@@ -48,7 +48,7 @@
                 {{`${e.from.name} - ${e.to.name}`}}
               </div>
               <div class="map-tooltip__item">
-                <img src="@/components/icons/metro.svg" alt="flag">
+                <img src="@/components/icons/flag.svg" alt="flag">
                 {{'Ветка: '+e.routeName || "Без Названия, ID:" + e.routeID}}
               </div>
               <div class="map-tooltip__item">
@@ -110,6 +110,7 @@ export default {
     if (!this.user) {
       this.$router.push("/login")
     }
+    console.log(this.user)
     this.permissions = checkUserPermissions(this.user)
     console.log(this.permissions)
     this.getData()

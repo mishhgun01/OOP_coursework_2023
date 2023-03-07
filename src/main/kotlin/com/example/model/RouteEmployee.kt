@@ -89,34 +89,15 @@ class RouteEmployeeService(private val connection: Connection) {
         }
     }
 
-    suspend fun updateByRoute(obj: Any) = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(UPDATE_SEQUENCE_BY_ROUTE)
-        if (obj is RouteEmployee) {
-            for (routeID in obj.routeIDs) {
-                for (employeeID in obj.employeeIDs) {
-                    statement.setInt(1, routeID)
-                    statement.setInt(2, employeeID)
-                    statement.setInt(3, routeID)
-                    statement.executeUpdate()
-                }
+    suspend fun updateByRoute(obj: RouteEmployee) = withContext(Dispatchers.IO) {
+        for (routeID in obj.routeIDs) {
+            for (employeeID in obj.employeeIDs) {
+                val statement = connection.prepareStatement(UPDATE_SEQUENCE_BY_ROUTE)
+                statement.setInt(1, routeID)
+                statement.setInt(2, employeeID)
+                statement.setInt(3, routeID)
+                statement.executeUpdate()
             }
-        } else {
-            throw Exception()
-        }
-    }
-    suspend fun updateByEmployee(obj: Any) = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(UPDATE_SEQUENCE_BY_EMPLOYEE)
-        if (obj is RouteEmployee) {
-            for (routeID in obj.routeIDs) {
-                for (employeeID in obj.employeeIDs) {
-                    statement.setInt(1, routeID)
-                    statement.setInt(2, employeeID)
-                    statement.setInt(3, employeeID)
-                    statement.executeUpdate()
-                }
-            }
-        } else {
-            throw Exception()
         }
     }
 

@@ -1,5 +1,5 @@
 <template>
-<div>
+<div class="table-container">
   <b-editable-table
       bordered
       class="editable-table"
@@ -124,6 +124,7 @@ export default {
 <style>
 table.editable-table {
   margin: auto;
+  background: antiquewhite;
 }
 
 table.editable-table td {
@@ -157,5 +158,10 @@ table.editable-table td {
 
 .is-active-col {
   width: 100px;
+}
+
+
+.table-container{
+  background: wheat;
 }
 </style>

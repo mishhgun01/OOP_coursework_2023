@@ -1,7 +1,7 @@
 <template>
   <div class="container-form">
   <div class="container-form__login">
-    <h2 class="mb-3">Регистрация</h2>
+    <h2 class="align-self-center mb-3">Регистрация</h2>
     <div class="input">
       <label for="email">Имя</label>
       <input
@@ -24,7 +24,7 @@
       <label for="password">Должность</label>
       <b-form-select
           id="inline-form-custom-select-pref"
-          class="form-control"
+          class="form-control mt-2"
           :options="roles"
           v-model="role"
       />
@@ -33,7 +33,7 @@
       <label for="password">Классификация</label>
       <b-form-select
           id="inline-form-custom-select-pref"
-          class="form-control"
+          class="form-control mt-2"
           :options="classifications"
           v-model="classification"
       />
@@ -42,7 +42,7 @@
       <label for="password">Ответственен за</label>
       <b-form-select
           id="inline-form-custom-select-pref"
-          class="form-control"
+          class="form-control mt-2"
           :options="routes"
           v-model="route"
       />
@@ -68,6 +68,7 @@
       />
     </div>
     <b-button
+        class="btn align-self-center w-50"
         pill
         variant="outline-primary"
         @click="onRegister"
@@ -75,7 +76,7 @@
     >Зарегистрироваться</b-button>
 
     <div class="alternative-option mt-4">
-      Уже есть аккаунт? <b-button class="btn-smaller" pill variant="outline-primary" @click="moveToLogin">Войти</b-button>
+      Уже есть аккаунт? <b-button class="btn" pill variant="outline-primary" @click="moveToLogin">Войти</b-button>
     </div>
     </div>
   </div>
@@ -161,32 +162,26 @@ export default {
     },
     onRegister() {
       console.log(this.classification)
+      const data = {  name: `${this.name} ${this.lastname}`,
+        role: this.role,
+        login: this.login,
+        password: hash(this.password),
+        classification: this.classification,
+        routes: [this.route.id]}
+      console.log(data)
       this.$http.post(url+"/api/v1/authentication", {
         name: `${this.name} ${this.lastname}`,
         role: this.role,
         login: this.login,
         password: hash(this.password),
         classification: this.classification,
-        route_ids: this.route.id}).then(response=>{
+        routes: [this.route.id]}).then(response=>{
           if (response&&response.data!==0) {
             this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
               localStorage.setItem('user', JSON.stringify(response.data))
-              const route = this.routes.find(r=>r.id===this.route.id)
-              switch (this.role.id) {
-                case 1:
-                  route.value.dispatchers.push(response.data)
-                      break;
-                case 2:
-                  route.value.machinists.push(response.data)
-                      break;
-              }
-              this.$http.patch(url+"/api/v1/routes", route.value).then(response=>{
-                if(response&&response.data.length) {
-                  this.$http.get(url + "/api/v1/routes").then(response => {
-                    const routes = response && response.data ? response.data : []
-                    localStorage.setItem('routes', JSON.stringify(routes))
-                  })
-                }
+              this.$http.get(url + "/api/v1/routes").then(response => {
+                const routes = response && response.data ? response.data : []
+                localStorage.setItem('routes', JSON.stringify(routes))
               })
             })
             this.$router.push("/map")
@@ -200,36 +195,13 @@ export default {
 };
 </script>
 <style>
-.container-form__login {
-  flex-direction: column;
-  justify-content: space-between;
-  align-self: center;
-  align-content: center;
-  width: 700px;
-  max-width: 95%;
-}
 
 .alternative-option {
   align-self: center;
 }
-.btn {
-  width: 100%;
+
+.form-control {
+  border-radius: 45px;
 }
 
-.btn-smaller {
-  width: 30%;
- }
-
-.input {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
-}
-.input > label {
-  text-align: start;
-}
-.input > input {
-  margin-top: 6px;
-  height: 38px !important;
-}
 </style>

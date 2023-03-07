@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="table-container">
     <b-editable-table v-if="editable"
         bordered
         class="editable-table"

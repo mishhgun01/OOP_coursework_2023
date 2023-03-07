@@ -1,8 +1,7 @@
 <template xmlns="http://www.w3.org/1999/html">
   <div class="container-form">
   <div class="container-form__login">
-    <img src="../components/icons/metro.svg" height="100px" width="100px" class="input">
-      <h2 class="mb-3">Login</h2>
+    <img src="../components/icons/metro.svg" height="100px" width="100px" class="img mt-3">
       <div class="input">
         <label for="email">Логин</label>
         <input
@@ -25,7 +24,7 @@
       </div>
 
       <b-button
-          class="btn"
+          class="btn align-self-center w-50"
           variant="outline-primary"
           pill
           :disabled="disable"
@@ -33,7 +32,7 @@
       >Войти
       </b-button>
       <div class="alternative-option mt-4">
-        Не зарегистрированы? <b-button class="btn-smaller" pill variant="outline-primary" @click="moveToRegister">Зарегистрироваться</b-button>
+        Не зарегистрированы? <b-button class="btn w-50" pill variant="outline-primary" @click="moveToRegister">Зарегистрироваться</b-button>
       </div>
   </div>
   </div>
@@ -88,8 +87,8 @@ export default {
           this.$http.get(url+"/api/v1/employees", {params: {id:response.data}}).then(response=>{
             localStorage.setItem('user', JSON.stringify(response.data))
             localStorage.setItem('user_permissions', JSON.stringify(checkUserPermissions(response.data)))
+            this.$router.push("/map")
           })
-          this.$router.push("/map")
         } else {
           this.failed = true
         }
@@ -107,6 +106,8 @@ export default {
   flex-direction: column;
   vertical-align: middle;
   justify-content: center;
+  height: 100vh;
+  background-color: antiquewhite;
 }
 
 .container-form__login {
@@ -116,10 +117,11 @@ export default {
   justify-content: center;
   align-self: center;
   align-content: center;
-  width: 700px;
+  width: 45%;
   max-width: 95%;
-  border: black 5px solid;
   border-radius: 45px;
+  box-shadow: 5px 5px 10px black;
+  background: wheat;
 }
 
 .alternative-option {
@@ -127,11 +129,16 @@ export default {
   margin-bottom: 15px;
 }
 
-
+.img {
+  justify-content: center;
+  align-self: center;
+}
 .input {
   display: flex;
   flex-direction: column;
   margin-bottom: 15px;
+  width: 50%;
+  align-self: center;
 }
 .input > label {
   text-align: start;
@@ -139,5 +146,7 @@ export default {
 .input > input {
   margin-top: 6px;
   height: 38px !important;
+  border-radius: 45px;
 }
+
 </style>

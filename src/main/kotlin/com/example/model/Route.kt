@@ -18,7 +18,8 @@ import java.sql.Connection
  */
 @Serializable
 data class Route(val id: Int, val name: String, val color: String, val stops: List<Stop>, val timeInterval: List<String>,
-                 val machinists: List<Employee>, val dispatchers: List<Employee>)
+                 val machinists: List<Employee> = mutableListOf(), val dispatchers: List<Employee> = mutableListOf()
+)
 
 /**
  * Класс для создания интерфейса между API БД.
@@ -135,10 +136,14 @@ class RouteService(private val connection: Connection) : Service {
             statement.setArray(4, Helper.prepareSQLArrayFromStringList(connection, obj.timeInterval))
             val resultSet = statement.resultSet
             if(resultSet.next())  {
-                val sequenceOfMachinists = RouteEmployee(mutableListOf(obj.id), obj.machinists.map { it.id!! })
-                RouteEmployeeService(connection).create(sequenceOfMachinists)
-                val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj.id), obj.dispatchers.map { it.id!! })
-                RouteEmployeeService(connection).create(sequenceOfDispatchers)
+                if (obj.machinists.isNotEmpty()) {
+                    val sequenceOfMachinists = RouteEmployee(mutableListOf(obj.id), obj.machinists.map { it.id!! })
+                    RouteEmployeeService(connection).create(sequenceOfMachinists)
+                }
+                if (obj.dispatchers.isNotEmpty()) {
+                    val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj.id), obj.dispatchers.map { it.id!! })
+                    RouteEmployeeService(connection).create(sequenceOfDispatchers)
+                }
                 return@withContext resultSet.getInt(1)
             } else {
                 throw Exception("error in creating routeIDs")
@@ -159,13 +164,18 @@ class RouteService(private val connection: Connection) : Service {
             statement.setString(2, obj.color)
             statement.setArray(3, Helper.prepareSQLArrayFromIntList(connection, obj.stops.map { it.id }))
             statement.setArray(4, Helper.prepareSQLArrayFromStringList(connection, obj.timeInterval))
-            statement.setInt(7, obj.id)
+            statement.setInt(5, obj.id)
             statement.executeUpdate()
 
-            val sequenceOfMachinists = RouteEmployee(mutableListOf(obj.id), obj.machinists.map { it.id!! })
-            RouteEmployeeService(connection).updateByRoute(sequenceOfMachinists)
-            val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj.id), obj.dispatchers.map { it.id!! })
-            RouteEmployeeService(connection).updateByRoute(sequenceOfDispatchers)
+
+            if (obj.machinists.isNotEmpty()) {
+                val sequenceOfMachinists = RouteEmployee(mutableListOf(obj.id), obj.machinists.map { it.id!! })
+                RouteEmployeeService(connection).updateByRoute(sequenceOfMachinists)
+            }
+            if (obj.dispatchers.isNotEmpty()) {
+                val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj.id), obj.dispatchers.map { it.id!! })
+                RouteEmployeeService(connection).updateByRoute(sequenceOfDispatchers)
+            }
         }else {
             throw Exception("error in updating routeIDs")
         }
@@ -179,10 +189,14 @@ class RouteService(private val connection: Connection) : Service {
         val statement = connection.prepareStatement(DELETE_ROUTE)
         statement.setInt(1, id)
         val obj = getById(id)
-        val sequenceOfMachinists = RouteEmployee(mutableListOf(obj.id), obj.machinists.map { it.id!! })
-        RouteEmployeeService(connection).deleteSequence(sequenceOfMachinists)
-        val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj.id), obj.dispatchers.map { it.id!! })
-        RouteEmployeeService(connection).deleteSequence(sequenceOfDispatchers)
+        if (obj.machinists.isNotEmpty()) {
+            val sequenceOfMachinists = RouteEmployee(mutableListOf(obj.id), obj.machinists.map { it.id!! })
+            RouteEmployeeService(connection).deleteSequence(sequenceOfMachinists)
+        }
+        if (obj.dispatchers.isNotEmpty()) {
+            val sequenceOfDispatchers = RouteEmployee(mutableListOf(obj.id), obj.dispatchers.map { it.id!! })
+            RouteEmployeeService(connection).deleteSequence(sequenceOfDispatchers)
+        }
         statement.executeUpdate()
     }
 }
