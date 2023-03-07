@@ -104,13 +104,16 @@ export default {
 <style>
 .container-form {
   display: flex;
+  flex-direction: column;
+  vertical-align: middle;
   justify-content: center;
-  align-items: center;
 }
 
 .container-form__login {
+  display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  vertical-align: middle;
+  justify-content: center;
   align-self: center;
   align-content: center;
   width: 700px;
