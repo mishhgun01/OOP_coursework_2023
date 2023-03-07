@@ -30,7 +30,7 @@
                 </div>
               </div>
             </l-tooltip>
-              </l-marker>
+          </l-marker>
         </div>
         <l-polyline
           v-for="(e,idx) in edges"
@@ -65,6 +65,7 @@
           </l-tooltip>
         </l-polyline>
       </l-map>
+      <right-bar v-if="selectedItem" :obj="selectedItem" :show="!!selectedItem" @closeSB="onCloseRightBar"/>
     </div>
   </div>
 </template>
@@ -80,16 +81,12 @@ import SidebarPanel from "@/components/SidebarPanel.vue";
 import consts from "@/helpers/consts";
 import createEdgesFromList from "@/helpers/createEdge";
 import checkUserPermissions from "@/helpers/checkPermissions";
+import RightBar from "@/components/RightBar.vue";
 
 export default {
   name: "Map",
-  computed: {
-    consts() {
-      return consts
-    }
-  },
-  components: {SidebarPanel, LeftPanel, LMap, LTileLayer, LMarker, LControl, LPolyline, LTooltip },
-  data: function() {
+  components: {RightBar, SidebarPanel, LeftPanel, LMap, LTileLayer, LMarker, LControl, LPolyline, LTooltip },
+  data() {
     return {
       user: null,
       zoom: 12,
@@ -100,7 +97,13 @@ export default {
       stops: [],
       routes: [],
       edges: [],
-      permissions: null
+      permissions: null,
+      selectedItem: null,
+    }
+  },
+  computed: {
+    consts() {
+      return consts
     }
   },
   created() {
@@ -146,9 +149,13 @@ export default {
     },
     onStopClicked(s) {
       console.log(s)
+      this.selectedItem = s
     },
     onEdgeClicked(e) {
       console.log(e)
+    },
+    onCloseRightBar() {
+      this.selectedItem = null
     }
   }
 }

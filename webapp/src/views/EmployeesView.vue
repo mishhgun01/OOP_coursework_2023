@@ -163,5 +163,7 @@ table.editable-table td {
 
 .table-container{
   background: wheat;
+  display: flex;
+  flex-direction: column;
 }
 </style>

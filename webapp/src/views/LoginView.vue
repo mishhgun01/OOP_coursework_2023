@@ -117,7 +117,7 @@ export default {
   justify-content: center;
   align-self: center;
   align-content: center;
-  width: 45%;
+  width: 30%;
   max-width: 95%;
   border-radius: 45px;
   box-shadow: 5px 5px 10px black;
