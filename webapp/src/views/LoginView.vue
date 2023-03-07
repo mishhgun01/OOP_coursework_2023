@@ -1,6 +1,7 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <div class="container-form">
   <div class="container-form__login">
+    <img src="../components/icons/metro.svg" height="100px" width="100px" class="input">
       <h2 class="mb-3">Login</h2>
       <div class="input">
         <label for="email">Логин</label>
@@ -22,15 +23,7 @@
             v-model="password"
         />
       </div>
-      <div class="input">
-        <label for="password">Должность</label>
-        <b-form-select
-            id="inline-form-custom-select-pref"
-            class="form-control"
-            :options="roles"
-            v-model="role"
-        />
-      </div>
+
       <b-button
           class="btn"
           variant="outline-primary"
@@ -63,13 +56,12 @@ export default {
       roles: [],
       login: "",
       password: "",
-      role: null,
       failed: false
     }
   },
   computed: {
     disable() {
-      return !this.login || !this.password || !this.role
+      return !this.login || !this.password
     }
   },
   created() {
@@ -113,7 +105,7 @@ export default {
 .container-form {
   display: flex;
   justify-content: center;
-  align-items: baseline;
+  align-items: center;
 }
 
 .container-form__login {
@@ -123,10 +115,13 @@ export default {
   align-content: center;
   width: 700px;
   max-width: 95%;
+  border: black 5px solid;
+  border-radius: 45px;
 }
 
 .alternative-option {
   align-self: center;
+  margin-bottom: 15px;
 }
 
 
