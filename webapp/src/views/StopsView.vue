@@ -6,7 +6,7 @@
     </b-button>
     <b-editable-table v-if="editable"
         bordered
-        class="editable-table"
+        class="editable-table w-100"
         v-model="stops"
         :fields="fields"
         :rowUpdate="rowUpdate"
@@ -23,8 +23,8 @@
              :items="stops"
              :fields="fieldsFixed"
              />
-    <div class="d-flex justify-content-center mt-5">
-    <b-button v-if="editable" class="btn-smaller" pill variant="outline-success" @click="onSaveClicked">Сохранить</b-button>
+    <div class="d-flex justify-content-center">
+    <b-button v-if="editable" class="btn w-100" variant="success" @click="onSaveClicked" :disabled="disable">Сохранить</b-button>
     </div>
     <b-modal id="ask" hide-footer size="sm">
       <template #modal-title>
@@ -71,7 +71,7 @@ export default {
           type: "text",
           editable: true,
           placeholder: "Enter Name...",
-          class: "name-col",
+          class: "name-col w-25",
         },
         {
           key: "lat",
@@ -112,7 +112,7 @@ export default {
           label: "Объявление",
           type: "text",
           editable: true,
-          class: "date-col"
+          class: "date-col w-50"
         },
         {
           key: "timeInterval",
@@ -180,9 +180,14 @@ export default {
       rowUpdate: {}
     }
   },
+  computed: {
+    disable() {
+      console.log(this.editedItems)
+      return this.editedItems.length === 0
+    }
+  },
   created() {
     this.user = JSON.parse(localStorage.getItem('user'))
-    console.log(this.user)
     this.stops = JSON.parse(localStorage.getItem('stops'))
     if (!this.stops.length) {
       this.getStops()

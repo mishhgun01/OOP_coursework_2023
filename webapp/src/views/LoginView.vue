@@ -16,10 +16,12 @@
         <label for="password">Пароль</label>
         <input
             class="form-control"
+            id="password"
             type="password"
             name="password"
             placeholder="password123"
             v-model="password"
+            :class="{animated:failed}"
         />
       </div>
 
@@ -81,6 +83,7 @@ export default {
       })
     },
     onLogin() {
+      this.failed = false
       const data = {login: this.login, password: hash(this.password)}
       this.$http.patch(url+"/api/v1/authentication", data).then(response=>{
         if(response&&response.data!==0) {
@@ -91,6 +94,8 @@ export default {
           })
         } else {
           this.failed = true
+          let el = document.getElementById("password")
+          el.className = ".form-control.animated"
         }
       })
     },
@@ -133,6 +138,7 @@ export default {
   justify-content: center;
   align-self: center;
 }
+
 .input {
   display: flex;
   flex-direction: column;
@@ -140,13 +146,22 @@ export default {
   width: 50%;
   align-self: center;
 }
-.input > label {
-  text-align: start;
-}
+
 .input > input {
   margin-top: 6px;
   height: 38px !important;
   border-radius: 45px;
 }
 
+.form-control.animated {
+  animation-name: shake;
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+@keyframes shake {
+  0%, 100% {transform: translateX(0); border-color: red}
+  10%, 30%, 50%, 70%, 90% {transform: translateX(-10px);}
+  20%, 40%, 60%, 80% {transform: translateX(10px);}
+}
 </style>

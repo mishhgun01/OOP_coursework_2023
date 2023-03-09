@@ -150,9 +150,12 @@ export default {
     onStopClicked(s) {
       console.log(s)
       this.selectedItem = s
+      this.selectedItem.isStop =  true
     },
     onEdgeClicked(e) {
-      console.log(e)
+      this.selectedItem = e
+      this.selectedItem.isStop =  false
+      console.log(this.selectedItem)
     },
     onCloseRightBar() {
       this.selectedItem = null
