@@ -182,9 +182,9 @@ export default {
               this.$http.get(url + "/api/v1/routes").then(response => {
                 const routes = response && response.data ? response.data : []
                 localStorage.setItem('routes', JSON.stringify(routes))
+                this.$router.push("/map")
               })
             })
-            this.$router.push("/map")
           }
       })
     },
