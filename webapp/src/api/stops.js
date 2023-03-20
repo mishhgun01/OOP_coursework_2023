@@ -1,5 +1,4 @@
 import {url} from "@/main";
-import http from "@/plugins/http";
 import axios from "axios";
 
 
