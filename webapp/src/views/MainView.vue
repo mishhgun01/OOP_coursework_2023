@@ -82,6 +82,11 @@ import consts from "@/helpers/consts";
 import createEdgesFromList from "@/helpers/createEdge";
 import checkUserPermissions from "@/helpers/checkPermissions";
 import RightBar from "@/components/RightBar.vue";
+import {getStops} from "@/api/stops";
+import {getEmployees} from "@/api/employees";
+import {getRoutes} from "@/api/routes";
+import {getRoles} from "@/api/roles";
+import {getClassification} from "@/api/classifications";
 
 export default {
   name: "Map",
@@ -120,29 +125,27 @@ export default {
   },
   methods: {
     getData() {
-      this.$http.get(url + "/api/v1/employees").then(response => {
-        this.employees = response && response.data ? response.data : []
-        localStorage.setItem("employees", JSON.stringify(response.data))
-        console.log(response.data)
-      })
-      this.$http.get(url+"/api/v1/stops").then(response=>{
+      getStops().then(response=>{
         this.stops = response&&response.data?response.data:[]
-        localStorage.setItem("stops", JSON.stringify(response.data))
+        localStorage.setItem("stops", JSON.stringify(this.stops))
       })
-      this.$http.get(url+"/api/v1/routes").then(response=>{
-        this.routes = response&&response.data?response.data:[]
-        localStorage.setItem("routes", JSON.stringify(response.data))
+      getEmployees().then(response=> {
+        this.employees = response && response.data ? response.data : []
+        localStorage.setItem("employees", JSON.stringify(this.employees))
+      })
+      getRoutes().then(response=> {
+        this.routes = response && response.data ? response.data : []
+        localStorage.setItem("routes", JSON.stringify(this.routes))
         let edges = []
-        response.data.forEach(r=>{
+        this.routes.forEach(r=>{
           edges.push(createEdgesFromList(r))
         })
         this.edges = edges.flat()
-        console.log(this.edges)
       })
-      this.$http.get(url+"/api/v1/roles").then(response=>{
+      getRoles().then(response=>{
         localStorage.setItem("roles", JSON.stringify(response.data))
       })
-      this.$http.get(url+"/api/v1/classification").then(response=>{
+      getClassification().then(response=>{
         localStorage.setItem("classes", JSON.stringify(response.data))
       })
 

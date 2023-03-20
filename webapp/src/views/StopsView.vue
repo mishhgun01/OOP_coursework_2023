@@ -1,9 +1,13 @@
 <template>
   <div class="table-container">
-    <b-button v-if="editable" variant="success" @click="handleAdd()">
+    <div class="d-flex flex-row">
+    <b-button v-if="editable" class="btn" @click="handleAdd()">
       Добавить остановку
       <img src="../components/icons/add.svg" width="25px" height="25px">
     </b-button>
+    <b-button v-if="editable" class="btn_save" @click="onSaveClicked" :disabled="disable">Сохранить</b-button>
+    <b-button v-if="editable" class="btn_save" @click="downloadAsFile">Скачать</b-button>
+    </div>
     <b-editable-table v-if="editable"
         bordered
         class="editable-table w-100"
@@ -23,14 +27,11 @@
              :items="stops"
              :fields="fieldsFixed"
              />
-    <div class="d-flex justify-content-center">
-    <b-button v-if="editable" class="btn w-100" variant="success" @click="onSaveClicked" :disabled="disable">Сохранить</b-button>
-    </div>
     <b-modal id="ask" hide-footer size="sm">
       <template #modal-title>
         Вы уверены?
       </template>
-      <b-button class="btn w-50 mt-3" variant="outline-success" @click="onDelete">Да</b-button>
+      <b-button class="btn w-50 mt-3" variant="outline-success" @click="onDeleteClicked">Да</b-button>
       <b-button class="bty w-50 mt-3" variant="danger" @click="$bvModal.hide('ask')">Отменить</b-button>
     </b-modal>
     <b-modal id="success" hide-footer size="sm">
@@ -48,6 +49,7 @@ import {url} from "@/main";
 import BEditableTable from "bootstrap-vue-editable-table";
 import {BButton, BIconTrash, BModal} from "bootstrap-vue";
 import checkUserPermissions from "@/helpers/checkPermissions";
+import {deleteStop, getStops, patchStops, postStop} from "@/api/stops";
 export default {
   name: "StopsView",
   components: {
@@ -196,9 +198,55 @@ export default {
   },
   methods: {
     getStops() {
-      this.$http.get(url+"/api/v1/stops").then(response=>{
+      getStops().then(response=>{
         this.stops = response&&response.data?response.data:[]
         localStorage.setItem("stops", JSON.stringify(response.data))
+      })
+    },
+    onSaveClicked() {
+      let success = true
+      this.editedItems.forEach(stop=>{
+        if (!stop.isNew) {
+          patchStops(stop).then(response => {
+            if (!response || !response.data) {
+              success = false
+            }
+          })
+        } else {
+          const data = {
+            id: stop.id,
+            name: stop.name,
+            lat: stop.lat,
+            lon: stop.lon,
+            isEnd: stop.isEnd,
+            notes: stop.notes,
+            timeInterval: stop.timeInterval
+          }
+          postStop(data).then(response => {
+            if (!response || !response.data) {
+              success = false
+            }
+          })
+        }
+      })
+      if (success) {
+        this.$bvModal.show("success")
+        this.$http.get(url+"/api/v1/stops").then(response=>{
+          this.stops = response&&response.data?response.data:[]
+          localStorage.setItem("stops", JSON.stringify(response.data))
+        })
+      }
+      this.editedItems.length=0
+    },
+    onDeleteClicked() {
+      deleteStop(this.deleteId).then(response=>{
+        if(response&&response.data) {
+          this.$bvModal.show("success")
+          this.$http.get(url+"/api/v1/stops").then(response=>{
+            this.stops = response&&response.data?response.data:[]
+            localStorage.setItem("stops", JSON.stringify(response.data))
+          })
+        }
       })
     },
     handleAdd() {
@@ -206,13 +254,14 @@ export default {
         edit: true,
         action: "add",
         data: {
-          id: 0,
+          id: Math.floor(Math.random() * 1000),
           name: "",
           lat: 0,
           lon: 0,
           isEnd: false,
           notes: "",
-          timeInterval: 0
+          timeInterval: 0,
+          isNew: true
         },
       };
     },
@@ -221,6 +270,8 @@ export default {
       let stop = this.stops.find(s=>s.id===value.id)
       let field = value.field.key
       stop[field] = value.field.type === "text" ? value.value : JSON.parse(value.value)
+      stop.lat = Number(stop.lat)
+      stop.lon = Number(stop.lon)
       console.log(stop)
       let id = -1
       if (this.editedItems.length) {
@@ -233,25 +284,6 @@ export default {
       id !==-1 ? this.editedItems[id] = stop : this.editedItems.push(stop)
       console.log(this.editedItems)
     },
-    onSaveClicked() {
-      let success = true
-      this.editedItems.forEach(stop=>{
-        this.$http.patch(url+"/api/v1/stops", stop).then(response=>{
-          console.log(response.data)
-          if (!response||!response.data) {
-           success = false
-          }
-       })
-     })
-      if (success) {
-       this.$bvModal.show("success")
-       this.$http.get(url+"/api/v1/stops").then(response=>{
-         this.stops = response&&response.data?response.data:[]
-         localStorage.setItem("stops", JSON.stringify(response.data))
-       })
-      }
-      this.editedItems.length=0
-    },
     handleDelete(data) {
       if (data.id === 0) {
         this.rowUpdate = { id: data.id, action: "delete" }
@@ -262,17 +294,13 @@ export default {
       this.$bvModal.show("ask")
       this.deleteId = data.id
     },
-    onDelete() {
-      console.log(this.deleteId)
-      this.$http.delete(url+"/api/v1/stops", {id: this.deleteId}).then(response=>{
-        if(response&&response.data) {
-          this.$bvModal.show("success")
-          this.$http.get(url+"/api/v1/stops").then(response=>{
-            this.stops = response&&response.data?response.data:[]
-            localStorage.setItem("stops", JSON.stringify(response.data))
-          })
-        }
-      })
+    downloadAsFile() {
+      let a = document.createElement("a");
+      const data = JSON.stringify(this.stops, null, '\t')
+      let file = new Blob([data], {type: 'application/json'});
+      a.href = URL.createObjectURL(file);
+      a.download = "stops.json";
+      a.click();
     }
   }
 }
@@ -287,6 +315,32 @@ export default {
   color: red;
   cursor: pointer;
   font-size: 20px;
+}
+
+.btn {
+  width: 20vw;
+  margin: 5px;
+  height: 3vw;
+  background: none;
+  color: black;
+}
+
+.btn_save{
+  width: 20vw;
+  margin: 5px;
+  height: 3vw;
+  background: none;
+  color: black;
+}
+
+.btn_save:hover {
+  color: antiquewhite;
+  background: aquamarine;
+}
+
+.btn:hover {
+  color: antiquewhite;
+  background: #328d0d;
 }
 
 </style>

@@ -12,7 +12,7 @@ import io.ktor.server.application.hooks.CallFailed.install
 import io.ktor.server.plugins.cors.routing.*
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "localhost", module = Application::module).start(wait = true)
+    embeddedServer(Netty, port = 8081, host = "localhost", module = Application::module).start(wait = true)
 }
 
 fun Application.module() {

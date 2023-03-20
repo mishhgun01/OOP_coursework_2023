@@ -33,9 +33,15 @@ fun Route.configureAuthRouting(employeeService: EmployeeService) {
                     val employee = call.receive<UserForAuth>()
                      val id = employeeService.authEmployee(employee)
                      var answerString = ""
-                     val logging: Job = launch { Logger("logger.log").upload("user $employee is trying to auth...$answerString") }
-                     if (id==0) answerString+="Failed..."
-                     else answerString+="Success!"
+                     val logging: Job = launch {
+                         answerString += if (id==0){
+                             "Failed..."
+                         } else "Success!"
+                         Logger("logger.log").upload("user $employee is trying to auth...$answerString")
+                     }
+                     if (id==0){
+                         throw Exception("login failed")
+                     }
                      logging.join()
                     call.respond(id)
                 }

@@ -92,11 +92,11 @@ export default {
             localStorage.setItem('user_permissions', JSON.stringify(checkUserPermissions(response.data)))
             this.$router.push("/map")
           })
-        } else {
-          this.failed = true
-          let el = document.getElementById("password")
-          el.className = ".form-control.animated"
         }
+      }).catch(e=>{
+        this.failed = true
+        let el = document.getElementById("password")
+        el.className = ".form-control.animated"
       })
     },
     moveToRegister() {

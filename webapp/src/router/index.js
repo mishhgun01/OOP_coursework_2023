@@ -6,12 +6,19 @@ import RegisterView from "@/views/RegisterView.vue";
 import EmployeesView from "@/views/EmployeesView.vue";
 import RoutesView from "@/views/RoutesView.vue";
 import StopsView from "@/views/StopsView.vue";
+import OpenView from "@/views/OpenView.vue";
+import NotFound from "@/views/NotFound.vue";
 
 Vue.use(VueRouter)
 
 const router = new VueRouter({
   mode: 'history',
   routes: [
+    {
+      path: '/',
+      name: 'open',
+      component: OpenView
+    },
     {
       path: '/map',
       name: 'map',
@@ -42,7 +49,10 @@ const router = new VueRouter({
       name: 'stops',
       component: StopsView
     },
-
+    {
+      path: '/*',
+      component: NotFound
+    }
   ]
 })
 

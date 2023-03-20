@@ -6,9 +6,9 @@ import router from './router'
 import http from "@/plugins/http";
 import BootstrapVue from "bootstrap-vue";
 Vue.use(http, {
-  baseUrl: "http://localhost:8080"
+  baseUrl: "http://localhost:8081"
 })
-Vue.prototype.$baseUrl = "http://localhost:8080"
+Vue.prototype.$baseUrl = "http://localhost:8081"
 export const url = Vue.prototype.$baseUrl
 
 Vue.use(BootstrapVue);
