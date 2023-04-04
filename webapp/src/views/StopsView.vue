@@ -7,6 +7,7 @@
     </b-button>
     <b-button v-if="editable" class="btn_save" @click="onSaveClicked" :disabled="disable">Сохранить</b-button>
     <b-button v-if="editable" class="btn_save" @click="downloadAsFile">Скачать</b-button>
+    <b-button v-if="editable" class="btn_save" @click="generateDocument">Сгенерировать отчет</b-button>
     </div>
     <b-editable-table v-if="editable"
         bordered
@@ -38,7 +39,6 @@
       <template #modal-title>
         Успешно!
       </template>
-      <b-button class="mt-3" variant="outline-success" size="sm" @click="$bvModal.hide('success')">OK</b-button>
     </b-modal>
   </div>
 </template>
@@ -50,6 +50,8 @@ import BEditableTable from "bootstrap-vue-editable-table";
 import {BButton, BIconTrash, BModal} from "bootstrap-vue";
 import checkUserPermissions from "@/helpers/checkPermissions";
 import {deleteStop, getStops, patchStops, postStop} from "@/api/stops";
+import jsPDF from "jspdf";
+import consts from "@/helpers/consts";
 export default {
   name: "StopsView",
   components: {
@@ -211,6 +213,11 @@ export default {
             if (!response || !response.data) {
               success = false
             }
+            getStops().then(response=> {
+              this.stops = response && response.data ? response.data : []
+              localStorage.setItem("stops", JSON.stringify(response.data))
+              window.location.reload()
+            })
           })
         } else {
           const data = {
@@ -226,15 +233,16 @@ export default {
             if (!response || !response.data) {
               success = false
             }
+            getStops().then(response=> {
+              this.stops = response && response.data ? response.data : []
+              localStorage.setItem("stops", JSON.stringify(response.data))
+              window.location.reload()
+            })
           })
         }
       })
       if (success) {
         this.$bvModal.show("success")
-        this.$http.get(url+"/api/v1/stops").then(response=>{
-          this.stops = response&&response.data?response.data:[]
-          localStorage.setItem("stops", JSON.stringify(response.data))
-        })
       }
       this.editedItems.length=0
     },
@@ -242,9 +250,10 @@ export default {
       deleteStop(this.deleteId).then(response=>{
         if(response&&response.data) {
           this.$bvModal.show("success")
-          this.$http.get(url+"/api/v1/stops").then(response=>{
+          getStops().then(response=>{
             this.stops = response&&response.data?response.data:[]
             localStorage.setItem("stops", JSON.stringify(response.data))
+            window.location.reload()
           })
         }
       })
@@ -295,12 +304,43 @@ export default {
       this.deleteId = data.id
     },
     downloadAsFile() {
-      let a = document.createElement("a");
+      const a = document.createElement("a");
       const data = JSON.stringify(this.stops, null, '\t')
-      let file = new Blob([data], {type: 'application/json'});
+      const file = new Blob([data], {type: 'application/json'});
       a.href = URL.createObjectURL(file);
       a.download = "stops.json";
       a.click();
+    },
+    generateDocument() {
+      let stops = ""
+      const stopNames = this.stops.map(s=>{
+        return s.name
+      })
+      stopNames.forEach(s=>{
+        stops+=`${s}\n`
+      })
+      const incidents = this.stops.filter(s=> s.notes !== "").map(s=>{
+        return {
+          name: s.name,
+          note: s.notes
+        }
+      })
+      let strIncidents = ""
+      incidents.forEach(i=>{
+        strIncidents += `${i.name}:\n ${i.note}\n`
+      })
+      const data = ` Остановки:\n\n\t ${stops}\n\n Инциденты/Объявления:\n\n${strIncidents}`
+      const customFont = consts.FONT
+      const doc = new jsPDF()
+      doc.addFileToVFS("customFont.ttf", customFont);
+      doc.addFont("customFont.ttf", "customFont", "normal");
+      doc.setFont("customFont");
+      doc.text(data, 10,10, {lang: 'ru'})
+      doc.save("test.pdf")
+      // const file = new Blob([data], {type: 'application/pdf'});
+      // a.href = URL.createObjectURL(file);
+      // a.download = "отчет по остановкам.pdf";
+      // a.click();
     }
   }
 }

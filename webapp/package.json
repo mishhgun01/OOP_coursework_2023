@@ -14,6 +14,7 @@
     "bootstrap": "^5.2.3",
     "bootstrap-vue": "^2.23.1",
     "bootstrap-vue-editable-table": "^0.1.9",
+    "jspdf": "^2.5.1",
     "leaflet": "^1.9.3",
     "vue": "^2.7.14",
     "vue-axios": "^3.5.2",
